@@ -57,7 +57,7 @@
                 gUse = JSON.parse(JSON.stringify(fullGraph));
                 gUse = graphWithLabels(gUse.jV, gUse.jE, ['Platform', 'Module']); //, 'GCC', 'HRIS ID']);
             }
-            else {
+            else if (levelUse == 'Pay/Calc') {
                 gUse = JSON.parse(JSON.stringify(fullGraph));
                 hrXPlatformNodeId = '5e2547ae-4cfe-4483-ae94-62237ca01c11';  // '075c5d82-2ed5-4dd8-b092-9a8983f2fc2f' (Persons graph)
                 hrXRootNodes = nodeIdsDirectlyConnectedTo(gUse, hrXPlatformNodeId);
@@ -65,6 +65,10 @@
                 var linkedIds = linkedNodeIds[levelUse];
                 both = combined.concat(hrXRootNodes.concat(linkedIds));  //payCalcLinkedIds));
                 gUse = graphWithIds(gUse.jV, gUse.jE, both);
+            }
+            else {
+                gUse = JSON.parse(JSON.stringify(fullGraph));
+
             }
 
           //   else if (levelUse == 'Pay/Calc') {
@@ -107,6 +111,11 @@
 
         container = svg.append("g");
 
+        var colours = {"Configuration Data": "blue",
+                       "Master Data": "green",
+                       "Transaction Data":  "orange",
+                       "Other": "grey"}
+
         svg.call(zoom).on("dblclick.zoom", null);
 
         link = container.append("g")
@@ -124,7 +133,20 @@
             .attr("class", function(d) { if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}})
             //.attr("class", "node")
             .attr("r", r)
-            .attr("fill", function(d) { return color(d.label);})
+            .attr("fill", function(d) {
+                   if (levelUse == 'Housekeeping') {
+                     if ('DataType' in d.properties) {
+                       return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+                     }
+                     else {
+                          return d3.color("grey");//color("Unknown");
+                     }
+                     //return color("Housekeeping");
+                   }
+                   else {
+                     return color(d.label);
+                   }
+                  })
             .on("click", function() {
                 console.log("clicked node");
                 showCard(this);
@@ -184,6 +206,9 @@
          //linkStrengthUpdated();
 
          update();
+
+         chargeStrengthVal +=1;
+         chargeStrengthUpdated();
 
     }
 
