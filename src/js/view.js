@@ -21,10 +21,28 @@
                 ctx.strokeText(d.name, d.x + 10, d.y);
             }
 
-        link.attr("x1", function(d) {return d.source.x;})
-            .attr("x2", function(d) {return d.target.x; })
-            .attr("y1", function(d) {return d.source.y; })
-            .attr("y2", function(d) {return d.target.y; })
+
+            function calcGrad(d) {
+                  var grad = (d.target.y - d.source.y)  / (d.target.x - d.source.x);
+                  var angle = Math.atan(grad);
+                  var absS = Math.abs(Math.sin(angle));
+                  var absC = Math.abs(Math.cos(angle));
+                  //var deltaC = (d.target.x >= d.source.x) ? c : c * -1;
+                  //var deltaS = (d.target.y >= d.source.y) ? s : s * -1;
+                  return {c:absC, s:absS};
+            }
+
+            function isPos(a, b) {
+              return b > a;
+            }
+
+
+
+
+        link.attr("x1", function(d) {return d.source.x  + calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)})
+            .attr("x2", function(d) {return d.target.x  - calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)  })
+            .attr("y1", function(d) {return d.source.y + calcGrad(d).s * r  * ((d.target.y >= d.source.y) ? 1 : -1) })
+            .attr("y2", function(d) {return d.target.y - calcGrad(d).s * r * ((d.target.y >= d.source.y) ? 1 : -1)  })
 
 
         node.attr("cx", (d) => { return d.x;})
@@ -34,7 +52,12 @@
         text.attr("x", (d) => { return d.x + 10;})
             .attr("y", (d) => { return d.y});
 
-
+        linkLabel.attr("x", (d) => {
+              return d.source.x + (d.target.x - d.source.x) / 2;
+              })
+            .attr("y", (d) => {
+              return d.target.y - (d.target.y - d.source.y) / 2;
+            })
 
     }
 
@@ -57,7 +80,11 @@
                 gUse = JSON.parse(JSON.stringify(fullGraph));
                 gUse = graphWithLabels(gUse.jV, gUse.jE, ['Platform', 'Module']); //, 'GCC', 'HRIS ID']);
             }
-            else if (levelUse == 'Pay/Calc') {
+            else if (levelUse == 'Housekeeping') {
+              gUse = JSON.parse(JSON.stringify(fullGraph));
+            }
+            else { // double click on module
+            //else if (levelUse == 'Pay/Calc') {
                 gUse = JSON.parse(JSON.stringify(fullGraph));
                 hrXPlatformNodeId = '5e2547ae-4cfe-4483-ae94-62237ca01c11';  // '075c5d82-2ed5-4dd8-b092-9a8983f2fc2f' (Persons graph)
                 hrXRootNodes = nodeIdsDirectlyConnectedTo(gUse, hrXPlatformNodeId);
@@ -66,10 +93,9 @@
                 both = combined.concat(hrXRootNodes.concat(linkedIds));  //payCalcLinkedIds));
                 gUse = graphWithIds(gUse.jV, gUse.jE, both);
             }
-            else {
-                gUse = JSON.parse(JSON.stringify(fullGraph));
-
-            }
+            // else {
+            //     gUse = JSON.parse(JSON.stringify(fullGraph));
+            //}
 
           //   else if (levelUse == 'Pay/Calc') {
           //       gUse = JSON.parse(JSON.stringify(fullGraph));
@@ -99,7 +125,8 @@
 
 
 
-        svg.selectAll("*").remove();
+        //svg.selectAll("*").remove();
+        svg.selectAll("g").remove();
 
 
         graph.nodes.forEach(function (n) {
@@ -124,6 +151,18 @@
             .data(graph.links)
             .enter().append("line")
             .attr("class", "link")
+            .attr("marker-end", "url(#arrowhead)")
+
+       linkLabel = container.append("g")
+            .attr("class", "link-labels")
+            .style("visibility", showLinkLabels ? "visible" : "hidden")
+            .selectAll("text")
+            .data(graph.links)
+            .enter().append("text")
+            .attr("class", "link-label")
+            .text(function(d) {return d.label;});
+
+
 
         node = container.append("g")
             .attr("class", "nodes")
@@ -188,6 +227,7 @@
         simulation = d3.forceSimulation()
             //.force("x", d3.forceX(width / 2))
             //.force("y", d3.forceY(height / 2))
+            //.force("center", d3.forceCenter(width / 2, height / 2))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .force("collide", d3.forceCollide(r + 1))
             .force("charge", d3.forceManyBody().strength(chargeStrengthVal))
@@ -213,13 +253,9 @@
     }
 
 
+    function changeChargeOrLinkStrength(value) {
 
-    function changeChargeStrength(value) {
-        //simulation = simulation.force("charge", d3.forceManyBody().strength(value));
-
-                //chargeStrengthVal = chargeStrength.value;
-
-                if (simulation == null) {
+                 if (simulation == null) {
                     return;
                 }
 
@@ -227,8 +263,73 @@
 
                 console.log("charge strength now: " + chargeStrengthVal);
                 simulation = d3.forceSimulation()
-                .force("x", d3.forceX(width / 2))
-                .force("y", d3.forceY(height / 2))
+                //.force("x", d3.forceX(width / 2))
+                //.force("y", d3.forceY(height / 2))
+                .force("x",d3.forceX(function(d) {
+                     if ((levelUse == "Housekeeping") && (attractDataTypes)) {
+                         if (d.DataType == 'Master Data') {
+                            return width / 5 * 1;
+                         }
+                         else if (d.DataType == "Transaction Data") {
+                            return width / 5 * 2;
+                         }
+                         else if (d.DataType == "Configuration Data") {
+                            return width / 5 * 3;
+                         }
+                         else {
+                            return  width / 5 * 4; //width / 2;
+                         }
+                     }
+                     else {
+
+                        return (width / 2);
+                     }
+
+
+
+
+
+                    //  if (d.label == "Module") {
+                    //    return 50;
+                    //  }
+                    //  else {
+                    //    return width / 2;
+                    //
+                    // }
+                  }))
+                .force("y", d3.forceY(function(d) {
+                    if ((levelUse == "Housekeeping")  && (attractDataTypes)) {
+                         if (d.DataType == 'Master Data') {
+                            return height / 5 * 1;
+                         }
+                         else if (d.DataType == "Transaction Data") {
+                            return height / 5 * 2;
+                         }
+                         else if (d.DataType == "Configuration Data") {
+                            return height / 5 * 3;
+                         }
+                         else {
+                            return  height / 5 * 4; //width / 2;
+                         }
+                     }
+                     else {
+
+                        return (height / 2);
+                     }
+
+                //.force ("center", d3.forceCenter( width / 2, height / 2))
+                //.force("center", d3.forceCenter((d) => {
+                //     console.log("forcing centre: " + d);
+                     // if (d.label == "Module") {
+                     //      return (50, 50)
+                     // }
+                     // else {
+                     //      return (width / 2, height / 2)
+                     // }
+                //    return (width / 2, height / 2)
+
+                }))
+
                 .force("collide", d3.forceCollide(r + 1))
                 .force("charge", d3.forceManyBody().strength(chargeStrengthVal)) //chargeStrength.value))
                 .force("link", d3.forceLink().strength(linkStrengthVal) //linkStrength.value)
@@ -246,52 +347,148 @@
 
 
 
-    }
-
-
-    function changeLinkStrength(value) {
-        //simulation = simulation.force("charge", d3.forceManyBody().strength(value));
-
-                if (simulation == null) {
-                    return;
-                }
-
-                simulation.stop();
-
-                //linkStrengthVal = linkStrength.value;
-                simulation = d3.forceSimulation()
-                .force("x", d3.forceX(width / 2))
-                .force("y", d3.forceY(height / 2))
-                .force("collide", d3.forceCollide(r + 1))
-                .force("charge", d3.forceManyBody().strength(chargeStrengthVal)) //chargeStrength.value))
-                .force("link", d3.forceLink().strength(linkStrengthVal) //linkStrength.value)
-                    .id(function (d) {
-                        return (useMyers) ? d.name : d.id //d.name
-                    }))
-                .on("tick", update);
-
-                simulation.nodes(graph.nodes);
-                simulation.force("link").links(graph.links);
-
-
-
-                update();
-
 
 
     }
+
+
+    // function changeChargeStrength(value) {
+    //     //simulation = simulation.force("charge", d3.forceManyBody().strength(value));
+    //
+    //             //chargeStrengthVal = chargeStrength.value;
+    //
+    //             if (simulation == null) {
+    //                 return;
+    //             }
+    //
+    //             simulation.stop();
+    //
+    //             console.log("charge strength now: " + chargeStrengthVal);
+    //             simulation = d3.forceSimulation()
+    //             //.force("x", d3.forceX(width / 2))
+    //             //.force("y", d3.forceY(height / 2))
+    //             .force("x",d3.forceX(function(d) {
+    //                  if (d.label == "Module") {
+    //                    return 50;
+    //                  }
+    //                  else {
+    //                    return width / 2;
+    //
+    //                 }
+    //               }))
+    //             .force("y", d3.forceY(function(d) {
+    //                   if (d.label == "Module") {
+    //                     return 50;
+    //                   } else {
+    //                     return width / 2;
+    //                   }
+    //                }))
+    //             //.force ("center", d3.forceCenter( width / 2, height / 2))
+    //             //.force("center", d3.forceCenter((d) => {
+    //             //     console.log("forcing centre: " + d);
+    //                  // if (d.label == "Module") {
+    //                  //      return (50, 50)
+    //                  // }
+    //                  // else {
+    //                  //      return (width / 2, height / 2)
+    //                  // }
+    //             //    return (width / 2, height / 2)
+    //
+    //             // }))
+    //
+    //             .force("collide", d3.forceCollide(r + 1))
+    //             .force("charge", d3.forceManyBody().strength(chargeStrengthVal)) //chargeStrength.value))
+    //             .force("link", d3.forceLink().strength(linkStrengthVal) //linkStrength.value)
+    //                 .id(function (d) {
+    //                     return (useMyers) ? d.name : d.id //d.name
+    //                 }))
+    //             .on("tick", update);
+    //
+    //             simulation.nodes(graph.nodes);
+    //             simulation.force("link").links(graph.links);
+    //
+    //
+    //
+    //             update();
+    //
+    //
+    //
+    // }
+    //
+    //
+    // function changeLinkStrength(value) {
+    //     //simulation = simulation.force("charge", d3.forceManyBody().strength(value));
+    //
+    //             if (simulation == null) {
+    //                 return;
+    //             }
+    //
+    //             simulation.stop();
+    //
+    //             //linkStrengthVal = linkStrength.value;
+    //             simulation = d3.forceSimulation()
+    //             //.force("x", d3.forceX(width / 2))
+    //             //.force("y", d3.forceY(height / 2))
+    //               .force("x",d3.forceX(function(d) {
+    //                  if (d.label == "Module") {
+    //                    return 50;
+    //                  }
+    //                  else {
+    //                    return width / 2;
+    //
+    //                 }
+    //               }))
+    //              .force("y", d3.forceY(function(d) {
+    //                   if (d.label == "Module") {
+    //                     return 50;
+    //                   } else {
+    //                     return width / 2;
+    //                   }
+    //                }))
+    //             // .force("y", d3.forceY(height / 2))
+    //
+    //             //.force ("center", d3.forceCenter( width / 2, height / 2))
+    //             //.force("center", d3.forceCenter((d) => {
+    //             //     console.log("forcing centre: " + d);
+    //             //     return (width / 2, height / 2)
+    //                  // if (d.label == "Module") {
+    //                  //      return (50, 50)
+    //                  // }
+    //                  // else {
+    //                  //      return (width /2, height / 2)
+    //                  // }
+    //
+    //              //}))
+    //             .force("collide", d3.forceCollide(r + 1))
+    //             .force("charge", d3.forceManyBody().strength(chargeStrengthVal)) //chargeStrength.value))
+    //             .force("link", d3.forceLink().strength(linkStrengthVal) //linkStrength.value)
+    //                 .id(function (d) {
+    //                     return (useMyers) ? d.name : d.id //d.name
+    //                 }))
+    //             .on("tick", update);
+    //
+    //             simulation.nodes(graph.nodes);
+    //             simulation.force("link").links(graph.links);
+    //
+    //
+    //
+    //             update();
+    //
+    //
+    //
+    // }
 
 
 
     function showCard(node) {
                 n = node.__data__;
                 document.getElementById("node-card-title").innerHTML = n.name + " (<small><small>" + n.label + "</small></small>)";
-
+                document.getElementById("node-card-description").innerHTML = n.NodeDescription;
 
                 var listGroup = document.getElementById("node-card-list-group");
                 listGroup.innerHTML = "";
 
-                var ignoreProps = ['partitionKey'];
+                var ignoreProps = ['partitionKey', 'NodeDescription'];
                 for (var prop in n.properties) {
                     if (Object.prototype.hasOwnProperty.call(n.properties, prop)) {
                         if (ignoreProps.includes(prop)) {

@@ -2,7 +2,7 @@
 
     function convNode(n) {
         //return n;
-        console.log(n);
+        //console.log(n);
         qq = Object.keys(n.properties);
         n.name = n.properties.name[0].value;
         var hasPII = false;
@@ -19,13 +19,29 @@
             }
         });
         n.hasPII = hasPII;
+        if (qq.includes('DataType')) {
+          n.DataType = n.properties.DataType[0].value;
+        }
+        else {
+          n.DataType = "Unknown";
+        }
+        if (qq.includes('NodeDescription')) {
+          n.NodeDescription = n.properties.NodeDescription[0].value;
+        }
+        else {
+          n.NodeDescription = "Description of the node here ....";
+        }
+
 
 
     }
 
     function convEdge(e) {
-        e.source = e.inV;
-        e.target = e.outV;
+        //e.source = e.inV;
+        //e.target = e.outV;
+        e.source = e.outV;
+        e.target = e.inV;
+
 
 
     }

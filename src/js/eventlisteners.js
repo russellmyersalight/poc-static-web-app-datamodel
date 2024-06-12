@@ -2,6 +2,7 @@
     function chargeStrengthSliderChanged(value) {
         chargeStrengthVal = chargeStrengthSlider.value;
         chargeStrengthUpdated();
+
     }
 
     function linkStrengthSliderChanged(value) {
@@ -22,6 +23,18 @@
     function piiCheckboxClicked(value) {
         showPII = value.checked;
         showPIIChanged();  //levelUseChanged();
+    }
+
+    function attractDataTypeCheckboxClicked(value) {
+        attractDataTypes = value.checked;
+        attractDataTypeChanged();
+
+    }
+
+    function showLinkLabelsCheckboxClicked(value) {
+        showLinkLabels = value.checked;
+        showLinkLabelsUpdated();
+
     }
 
     // on mouse down in canvas
@@ -107,6 +120,11 @@
                }
                levelUseChanged();
            }
+           else if (n.label == 'Platform') {
+                expandedNode = null;
+                levelUse = 'Modules';
+                levelUseChanged();
+           }
     }
 
 
@@ -126,7 +144,7 @@
 
     function ajaxVerticesReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('Got stuff. Result: ' + parsed);
+        console.log('ajax Vertices retrieved. Result: ' + parsed);
         queriesReturned[0] = true;
 
         jNodes = parsed["Result"];
@@ -180,7 +198,7 @@
 
     function ajaxEdgesReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('Got stuff. Result: ' + parsed);
+        console.log('ajax Edges retrieved. Result: ' + parsed);
         queriesReturned[1] = true;
 
         jEdges = parsed["Result"];
@@ -218,7 +236,7 @@
 
     function ajaxModuleLinksReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('Got stuff. Result: ' + parsed);
+        console.log('ajax Module links retrieved. Result: ' + parsed);
         //queriesReturned[2] = true;
         //if (allQueriesReturned()) {
         //    console.log("QDone - last 2");
@@ -234,9 +252,10 @@
 
     }
 
+    // Deprecated (uses Module links)
     function ajaxPayCalcLinksReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('Got stuff. Result: ' + parsed);
+        console.log('ajax Paycalc links retrieved. Result: ' + parsed);
         queriesReturned[2] = true;
         if (allQueriesReturned()) {
             console.log("QDone - last 2");
@@ -252,9 +271,10 @@
 
     }
 
+    // Deprecated (uses Module links)
     function ajaxEloiseLinksReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('Got stuff. Result: ' + parsed);
+        console.log('ajax Eloise links retrieved. Result: ' + parsed);
         queriesReturned[3] = true;
         if (allQueriesReturned()) {
             console.log("QDone - last 3");
@@ -271,7 +291,7 @@
 
 
     function fullGraphLoaded(g) {
-        console.log(g);
+        console.log("Full graph loaded");
         svg.selectAll("text").remove();
         fullGraph = g;
 

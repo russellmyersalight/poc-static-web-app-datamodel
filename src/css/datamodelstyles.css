@@ -3,6 +3,13 @@
     stroke-opacity: 0.6;
 }
 
+.link-label {
+   text-anchor: middle;
+   font-family: sans-serif;
+   font-size: 4px;
+   pointer-events: none;
+}
+
 .node {
     stroke: #fff;
     stroke-width: 1.5px;

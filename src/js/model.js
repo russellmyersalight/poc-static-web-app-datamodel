@@ -25,6 +25,7 @@
     var link;
     var node;
     var text;
+    var linkLabel;
 
     var simulation;
 
@@ -39,6 +40,11 @@
 
     var showPII = false;
 
+    var showLinkLabels = false;
+
+    var defaultLinkStrengthVal = 0.3;
+    var defaultChargeStrengthVal  = -344; //-344;
+
     var linkStrengthVal; //= 0.2;
     var chargeStrengthVal;  //= -344;
 
@@ -52,6 +58,8 @@
     var fullV;
     var fullE;
 
+    var attractDataTypes = false;
+
 
 
 
@@ -59,12 +67,14 @@
 //  Property listeners
 
     function linkStrengthUpdated() {
-        changeLinkStrength();
+        //changeLinkStrength();
+        changeChargeOrLinkStrength();
         showLinkStrength();
     }
 
     function chargeStrengthUpdated() {
-        changeChargeStrength();
+        //changeChargeStrength();
+        changeChargeOrLinkStrength();
         showChargeStrength();
     }
 
@@ -78,9 +88,61 @@
             // }
             // graph = {nodes: gUse.jV, links: gUse.jE};
             // update();
+            if (levelUse == 'Housekeeping') {
+               document.getElementById("attract-checkbox").style.visibility = "visible";
+            }
+            else {
+               document.getElementById("attract-checkbox").style.visibility = "hidden";
+               attractDataTypes = false;
+               attractDataTypeChanged();
+            }
+
             changeLevelRadioButtonSelection();
 
             initialiseGraph();
+
+
+            // if (levelUse == 'Modules') {
+            //     hrXNode = null;
+            //     var nodes = document.getElementsByClassName("node");
+            //     for (var n of nodes){
+            //         if (n.__data__.label == 'Platform') {
+            //           hrXNode = n;
+            //         }
+            //     };
+            //     if (hrXNode) {
+            //       showCard(hrXNode);
+            //     }
+            //
+            // }
+
+   }
+
+   function attractDataTypeChanged() {
+       if (attractDataTypes) {
+           chargeStrengthVal = -100;
+           linkStrengthVal = 0;
+           chargeStrengthUpdated();
+           linkStrengthUpdated();
+       }
+       else {
+           chargeStrengthVal = defaultChargeStrengthVal;
+           linkStrengthVal = defaultLinkStrengthVal;
+           chargeStrengthUpdated();
+           linkStrengthUpdated();
+
+       }
+       document.getElementById("attractDataType").checked = attractDataTypes;
+   }
+
+
+   function showLinkLabelsUpdated() {
+      // update checkbox
+      document.getElementById("show-link-labels-cb").checked = showLinkLabels;
+      // make link labels hidden or visible
+      d3.select('svg')
+               .selectAll('.link-labels')
+               .style("visibility", showLinkLabels ? "visible" : "hidden");
 
    }
 
