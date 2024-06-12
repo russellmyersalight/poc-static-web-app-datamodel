@@ -177,10 +177,12 @@
 
     params = "query=g.V()";
     callback = ajaxVerticesReturned;
+    retrieveVerticesStartTime = performance.now();
     sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
 
     params = "query=g.E()";
     callback = ajaxEdgesReturned;
+    retrieveEdgesStartTime = performance.now();
     sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
 
 
@@ -194,6 +196,7 @@
            var depth = (m == 'Pay/Calc' ? 5 : 7);
            params = assembleLinkedNodeParam(m, depth=depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
            callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
+           retrieveModuleStartTimes[m] = performance.now();
            sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
            });
 

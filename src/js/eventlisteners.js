@@ -143,8 +143,10 @@
 
 
     function ajaxVerticesReturned(xmlhttp) {
+        retrieveVerticesEndTime = performance.now();
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('ajax Vertices retrieved. Result: ' + parsed);
+        //console.log('ajax Vertices retrieved. Result: ' + parsed);
+
         queriesReturned[0] = true;
 
         jNodes = parsed["Result"];
@@ -160,6 +162,8 @@
         else {
             flattened = jNodes;
         }
+
+        console.log('ajax Vertices retrieved for query: ' + parsed.Query + ' Number of Vertices: ' + flattened.length + ' time taken: ' + ((retrieveVerticesEndTime - retrieveVerticesStartTime) / 1000).toFixed(1) + 's');
 
         flattened.forEach((n) => convNode(n));
 
@@ -197,8 +201,10 @@
     }
 
     function ajaxEdgesReturned(xmlhttp) {
+        retrieveEdgesEndTime  = performance.now();
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('ajax Edges retrieved. Result: ' + parsed);
+        //console.log('ajax Edges retrieved. Result: ' + parsed);
+
         queriesReturned[1] = true;
 
         jEdges = parsed["Result"];
@@ -215,6 +221,8 @@
         else {
             flattened = jEdges;
         }
+
+        console.log('ajax Edges retrieved for query: ' + parsed.Query + ' Number of Edges: ' + flattened.length +  ' time taken: ' + ((retrieveEdgesEndTime - retrieveEdgesStartTime) / 1000).toFixed(1) + 's');
 
         flattened.forEach((e) => convEdge(e));
 
@@ -236,7 +244,18 @@
 
     function ajaxModuleLinksReturned(xmlhttp) {
         var parsed = JSON.parse(xmlhttp.responseText);
-        console.log('ajax Module links retrieved. Result: ' + parsed);
+
+        var module = parsed.Query.slice(19);
+        var endInd = module.indexOf("'");
+        module = module.slice(0, endInd);
+        retrieveModuleEndTimes[module] = performance.now();
+        var timeTaken = 0;
+        if (module in retrieveModuleStartTimes) {
+           timeTaken = ((retrieveModuleEndTimes[module] - retrieveModuleStartTimes[module]) / 1000).toFixed(1);
+        }
+
+
+
         //queriesReturned[2] = true;
         //if (allQueriesReturned()) {
         //    console.log("QDone - last 2");
@@ -244,6 +263,9 @@
            // fullGraphLoaded(g);
        // }
         flattened = flattenAr(parsed["Result"]);
+
+        console.log('ajax Module links retrieved for query: ' + parsed.Query + ' Number of links: ' + flattened.length + " Time taken: " + module + " " + timeTaken + "s");
+
         module = flattened[0].properties.name[0].value;
         linkedNodeIds[module] = setLinkedNodeIds(flattened, module);
         //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);

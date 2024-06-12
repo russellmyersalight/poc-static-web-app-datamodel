@@ -60,6 +60,12 @@
 
     var attractDataTypes = false;
 
+    var retrieveVerticesStartTime;
+    var retrieveVerticesEndTime;
+    var retrieveEdgesStartTime;
+    var retrieveEdgesEndTime;
+    var retrieveModuleStartTimes = {};
+    var retrieveModuleEndTimes = {};
 
 
 

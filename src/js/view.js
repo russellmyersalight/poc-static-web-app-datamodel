@@ -25,11 +25,12 @@
             function calcGrad(d) {
                   var grad = (d.target.y - d.source.y)  / (d.target.x - d.source.x);
                   var angle = Math.atan(grad);
+                  var gradDegrees = angle * 180 / Math.PI;
                   var absS = Math.abs(Math.sin(angle));
                   var absC = Math.abs(Math.cos(angle));
                   //var deltaC = (d.target.x >= d.source.x) ? c : c * -1;
                   //var deltaS = (d.target.y >= d.source.y) ? s : s * -1;
-                  return {c:absC, s:absS};
+                  return {c:absC, s:absS, grad:gradDegrees};
             }
 
             function isPos(a, b) {
@@ -53,11 +54,38 @@
             .attr("y", (d) => { return d.y});
 
         linkLabel.attr("x", (d) => {
-              return d.source.x + (d.target.x - d.source.x) / 2;
+              var deltaX;
+              if (d.target.x < d.source.x) {
+                deltaX = (d.target.y > d.source.y) ? -2 : 2;
+              }
+              else {
+                deltaX = (d.target.y > d.source.y) ? 2 :  -2;
+              }
+              return d.source.x + (d.target.x - d.source.x) / 2 + deltaX;
               })
             .attr("y", (d) => {
               return d.target.y - (d.target.y - d.source.y) / 2;
-            })
+            });
+
+          if (true) {
+            linkLabel.attr('transform', function (d) {
+
+
+              //if (d.target.x < d.source.x) {
+              let bbox = this.getBBox();
+
+              let rx = bbox.x + bbox.width / 2;
+              let ry = bbox.y + bbox.height / 2;
+              var gradDegrees = Math.round(calcGrad(d).grad);
+              var rotation = 'rotate(' + gradDegrees + ' ' + Math.round(rx) + ' ' + Math.round(ry) + ')';
+              return rotation;
+              //}
+              // else {
+              //     return 'rotate(0)';
+              // }
+
+            });
+          }
 
     }
 
