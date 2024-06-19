@@ -173,14 +173,14 @@
 
    // parse json from azure gremlin query through Pay/Calc nodes
 
-   function setLinkedNodeIds(j, module) {
+   function setLinkedNodeIds(j, identifier) {
          var ids = [];
          j.forEach((item) => {
              ids.push(item.id);
          });
          var idSet = new Set(ids);
          var idAr = Array.from(idSet);
-         linkedNodeIds[module] = idAr;
+         linkedNodeIds[identifier] = idAr;
          return idAr;
 
    }
@@ -223,6 +223,22 @@
    function nodeHasPIIData(n) {
 
    }
+
+   function flattenObjects(ar) {
+        // where gremlin query returns vertices embedded in objects
+
+        var flattened = [];
+        ar.forEach((g) => {
+           g.objects.forEach((el) => {
+                    flattened.push(el);
+           });
+
+        });
+
+        return flattened;
+
+    }
+
 
    function sendAjax(url, params, callback, method='GET', payload=null) {
         var xmlhttp;

@@ -38,9 +38,20 @@
     var eloiseLinkedIds;
     var linkedNodeIds = {};
 
+    var colours
+         = {"Configuration Data": "blue",
+            "Master Data": "green",
+            "Transaction Data":  "orange",
+            "Other": "grey"};  // colours for data categories
+
     var showPII = false;
 
     var showLinkLabels = false;
+    var showDataCategories = false;
+
+    var searchVal;
+    var search2Val;
+    var aggregateVal;
 
     var defaultLinkStrengthVal = 0.3;
     var defaultChargeStrengthVal  = -344; //-344;
@@ -66,6 +77,8 @@
     var retrieveEdgesEndTime;
     var retrieveModuleStartTimes = {};
     var retrieveModuleEndTimes = {};
+    var retrieveLabelTargetStartTimes = {};
+    var retrieveLabelTargetEndTimes = {};
 
 
 
@@ -94,13 +107,15 @@
             // }
             // graph = {nodes: gUse.jV, links: gUse.jE};
             // update();
-            if (levelUse == 'Housekeeping') {
-               document.getElementById("attract-checkbox").style.visibility = "visible";
-            }
-            else {
-               document.getElementById("attract-checkbox").style.visibility = "hidden";
-               attractDataTypes = false;
-               attractDataTypeChanged();
+
+            if (false) {
+              if (levelUse == 'Housekeeping') {
+                document.getElementById("attract-checkbox").style.visibility = "visible";
+              } else {
+                document.getElementById("attract-checkbox").style.visibility = "hidden";
+                attractDataTypes = false;
+                attractDataTypeChanged();
+              }
             }
 
             changeLevelRadioButtonSelection();
@@ -152,3 +167,67 @@
 
    }
 
+   function showDataCategoriesUpdated() {
+      // update checkbox
+      document.getElementById("show-data-categories-cb").checked = showDataCategories;
+
+      showDataCategoryLegend();
+
+      //document.getElementById("attract-checkbox").style.visibility = (showDataCategories) ? "visible" : "hidden";
+
+      levelUseChanged();
+
+   }
+
+
+   function searchValUpdated() {
+      //document.getElementById("search-select").value = searchVal;
+      levelUse = searchVal;
+      levelUseChanged();
+      //initialiseGraph();
+
+   }
+
+    function search2ValUpdated() {
+      document.getElementById("search-select2").value = search2Val;
+      if (search2Val == "Choose") {
+        searchVal = "Modules";
+         levelUse = "Modules";
+      }
+      else {
+        searchVal = search2Val;
+        levelUse = search2Val;
+      }
+      searchValUpdated();
+      levelUseChanged();
+      //initialiseGraph();
+
+   }
+   function aggregateValUpdated() {
+      document.getElementById("aggregate-select").value = aggregateVal;
+
+      if (aggregateVal != 'All') {
+           chargeStrengthVal = -100;
+           linkStrengthVal = 0;
+
+           if (aggregateVal == 'Data Category') {
+             if (!showDataCategories) {
+               showDataCategories = true;
+               showDataCategoriesUpdated();
+             }
+           }
+           chargeStrengthUpdated();
+           linkStrengthUpdated();
+       }
+       else {
+           chargeStrengthVal = defaultChargeStrengthVal;
+           linkStrengthVal = defaultLinkStrengthVal;
+           chargeStrengthUpdated();
+           linkStrengthUpdated();
+
+       }
+
+      levelUseChanged();
+      //initialiseGraph();
+
+   }

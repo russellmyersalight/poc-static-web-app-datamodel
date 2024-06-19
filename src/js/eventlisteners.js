@@ -14,6 +14,10 @@
 
 
     function radioButtonClicked(value) {
+        if ((value == "All") || (value == "Modules")) {
+          search2Val = "Choose";
+          search2ValUpdated();
+        }
         levelUse = value;
         levelUseChanged();
 
@@ -36,6 +40,33 @@
         showLinkLabelsUpdated();
 
     }
+
+    function showDataCategoriesCheckboxClicked(value) {
+        showDataCategories = value.checked;
+        showDataCategoriesUpdated();
+
+    }
+7
+
+    function searchSelectChanged(el) {
+         var val = el.options[el.selectedIndex].value;
+         searchVal = val;
+         searchValUpdated();
+    }
+
+    function searchSelect2Changed(el) {
+         var val = el.options[el.selectedIndex].value;
+         search2Val = val;
+         search2ValUpdated();
+    }
+
+
+    function aggregateSelectChanged(el) {
+         var val = el.options[el.selectedIndex].value;
+         aggregateVal = val;
+         aggregateValUpdated();
+    }
+
 
     // on mouse down in canvas
     function getCursorPosition(canvas, event) {
@@ -113,18 +144,29 @@
            if (n.label == 'Module') {
                if (expandedNode == n.name) {
                    expandedNode = null;
+                   searchVal = 'Modules';
+                   search2Val = 'Modules';
                    levelUse = 'Modules';
                } else {
                    expandedNode = n.name;
+                   searchVal = n.name;
+                   search2Val = n.name;
                    levelUse = n.name;
                }
-               levelUseChanged();
+
            }
            else if (n.label == 'Platform') {
                 expandedNode = null;
+                searchVal = 'Modules';
+                search2Val = 'Modules';
                 levelUse = 'Modules';
-                levelUseChanged();
+
            }
+
+
+           searchValUpdated();
+           search2ValUpdated();
+           levelUseChanged();
     }
 
 
@@ -143,6 +185,8 @@
 
 
     function ajaxVerticesReturned(xmlhttp) {
+        //document.getElementsByClassName('loading-text')[0].innerHTML = "<p>Loading...<br>vertices loaded</p>"
+       document.getElementsByClassName('loading-text')[0].innerHTML = "Loading..<tspan>Vertices loaded</tspan>"
         retrieveVerticesEndTime = performance.now();
         var parsed = JSON.parse(xmlhttp.responseText);
         //console.log('ajax Vertices retrieved. Result: ' + parsed);
@@ -201,6 +245,8 @@
     }
 
     function ajaxEdgesReturned(xmlhttp) {
+
+        document.getElementsByClassName('loading-text')[0].innerHTML = "Loading..<tspan>Edges loaded</tspan>";
         retrieveEdgesEndTime  = performance.now();
         var parsed = JSON.parse(xmlhttp.responseText);
         //console.log('ajax Edges retrieved. Result: ' + parsed);
@@ -270,6 +316,8 @@
         linkedNodeIds[module] = setLinkedNodeIds(flattened, module);
         //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);
 
+        updateNodeLabels(); // to show exclamation mark when module loaded
+
         return parsed
 
     }
@@ -310,11 +358,49 @@
 
     }
 
+   function ajaxLabelTargetReturned(xmlhttp) {
+        var parsed = JSON.parse(xmlhttp.responseText);
+
+        var search = "until(hasLabel('";
+        var labelStartInd = parsed.Query.indexOf("until(hasLabel('") + search.length;
+        var label = parsed.Query.slice(labelStartInd);
+        var labelEndInd = label.indexOf("'");
+        label = label.slice(0, labelEndInd);
+        retrieveLabelTargetEndTimes[label] = performance.now();
+        var timeTaken = 0;
+        if (label in retrieveLabelTargetStartTimes) {
+           timeTaken = ((retrieveLabelTargetEndTimes[label] - retrieveLabelTargetStartTimes[label]) / 1000).toFixed(1);
+        }
+
+
+
+        //queriesReturned[2] = true;
+        //if (allQueriesReturned()) {
+        //    console.log("QDone - last 2");
+           //g = {"jV": fullV, "jE": fullE};
+           // fullGraphLoaded(g);
+       // }
+        flattened = flattenAr(parsed["Result"]);
+
+        flattenedObs = flattenObjects(flattened);
+
+
+        console.log('ajax Label Target links retrieved for query: ' + parsed.Query + ' Number of paths: ' + flattened.length + ' Number of links: ' + flattenedObs.length + " Time taken: " + label + " " + timeTaken + "s");
+
+        linkedNodeIds[label] = setLinkedNodeIds(flattenedObs, label);
+        //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);
+
+
+        return parsed
+
+    }
+
 
 
     function fullGraphLoaded(g) {
         console.log("Full graph loaded");
         svg.selectAll("text").remove();
+        svg.selectAll(".loading-image").remove();
         fullGraph = g;
 
 

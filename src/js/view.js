@@ -92,6 +92,7 @@
 
     function initialiseGraph() {
 
+
         if (fullGraph == null) {
             return;
         }
@@ -101,7 +102,12 @@
             graph = {nodes: gUse.nodes, links: gUse.links};
         }
         else {
-            if (levelUse ==  'All') {
+            if (levelUse in ["GCC", "LCC", "HRIS ID"]) {
+                gUse = JSON.parse(JSON.stringify(fullGraph));
+                var linkedIds = linkedNodeIds[searchVal];
+                gUse = graphWithIds(gUse.jV, gUse.jE, linkedIds);
+            }
+            else if (levelUse ==  'All') {
                 gUse = JSON.parse(JSON.stringify(fullGraph));
             }
             else if (levelUse == 'Modules') {
@@ -166,10 +172,7 @@
 
         container = svg.append("g");
 
-        var colours = {"Configuration Data": "blue",
-                       "Master Data": "green",
-                       "Transaction Data":  "orange",
-                       "Other": "grey"}
+
 
         svg.call(zoom).on("dblclick.zoom", null);
 
@@ -201,7 +204,8 @@
             //.attr("class", "node")
             .attr("r", r)
             .attr("fill", function(d) {
-                   if (levelUse == 'Housekeeping') {
+                   //if (levelUse == 'Housekeeping') {
+                   if (showDataCategories) {
                      if ('DataType' in d.properties) {
                        return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
                      }
@@ -228,9 +232,11 @@
 
 
         text = container.append("g")
+            .attr('class', 'node-labels')
             .selectAll("text")
             .data(graph.nodes)
             .enter().append("text")
+            .attr('class', 'node-label')
             .text(function(d) {return d.name;});
 
 
@@ -294,7 +300,7 @@
                 //.force("x", d3.forceX(width / 2))
                 //.force("y", d3.forceY(height / 2))
                 .force("x",d3.forceX(function(d) {
-                     if ((levelUse == "Housekeeping") && (attractDataTypes)) {
+                     if  (aggregateVal == 'Data Category') {//((levelUse == "Housekeeping") && (attractDataTypes)) {
                          if (d.DataType == 'Master Data') {
                             return width / 5 * 1;
                          }
@@ -308,13 +314,17 @@
                             return  width / 5 * 4; //width / 2;
                          }
                      }
-                     else {
-
-                        return (width / 2);
+                     else if (aggregateVal == 'All') {
+                           return (width / 2);
                      }
+                     else {
+                        if (d.label == aggregateVal) {
+                          return width / 5 * 1;
+                        } else {
 
-
-
+                          return (width / 2);
+                        }
+                     }
 
 
                     //  if (d.label == "Module") {
@@ -326,7 +336,7 @@
                     // }
                   }))
                 .force("y", d3.forceY(function(d) {
-                    if ((levelUse == "Housekeeping")  && (attractDataTypes)) {
+                    if  (aggregateVal == "Data Category") {//((levelUse == "Housekeeping")  && (attractDataTypes)) {
                          if (d.DataType == 'Master Data') {
                             return height / 5 * 1;
                          }
@@ -340,10 +350,20 @@
                             return  height / 5 * 4; //width / 2;
                          }
                      }
+                     else if (aggregateVal == 'All') {
+                           return (height / 2);
+                     }
+
                      else {
+                      if (d.label == aggregateVal) {
+                        return height / 5 * 1;
+                      } else {
 
                         return (height / 2);
-                     }
+                      }
+                    }
+
+
 
                 //.force ("center", d3.forceCenter( width / 2, height / 2))
                 //.force("center", d3.forceCenter((d) => {
@@ -567,4 +587,77 @@
                 radios[i].checked = false;
             }
         }
+    }
+
+    function updateNodeLabels() {
+
+      if (container) {
+        container.selectAll(".node-label")
+          .text(function (d) {
+            var name = d.name;
+            if ((d.label == 'Module') && (d.name in retrieveModuleEndTimes)) {
+               //name += '!!!';  visualise module loaded
+            }
+            return name;
+          });
+      }
+    }
+
+    function showDataCategoryLegend() {
+
+            if (showDataCategories) {
+              var keys = [];
+              for (var k in colours) {
+                keys.push([k, colours[k]]);
+              }
+
+              //var keys = [{"label": "One", "colour": "red"}, {"label": "Two", "colour": "green"}, {"label": "Three", "colour" : "orange"}];
+              var size = 20;
+              //var bBox = svg.getBBox();
+
+
+              //svg.append("g")
+              //   .attr("class", "data-category-legend");
+
+              //svg.select(".data-category-legend")
+              svg.selectAll("dclegenddots")
+                .data(keys)
+                .enter()
+                .append("rect")
+                .attr("class", "dc-legend-dot")
+                .attr("x", 10)
+                .attr("y", function (d, i) {
+                  return rect.height - ((i+1) * (size + 5))
+                }) // 100 is where the first dot appears. 25 is the distance between dots
+                .attr("width", size)
+                .attr("height", size)
+                .style("fill", function (d) {
+                  return d[1];
+                });
+
+              //svg.select(".data-category-legend")
+              svg.selectAll("dclegendlabels")
+                .data(keys)
+                .enter()
+                .append("text")
+                .attr("class", "dc-legend-text")
+                .attr("x", 10 + size * 1.2)
+                .attr("y", function (d, i) {
+                  return rect.height - ( ((i+1) * (size + 5)) - (size / 2))
+                }) // 100 is where the first dot appears. 25 is the distance between dots
+                .style("fill", function (d) {
+                  return d[1]
+                })
+                .text(function (d) {
+                  return d[0]
+                })
+                .attr("text-anchor", "left")
+                .style("alignment-baseline", "middle");
+            }
+            else {
+                svg.selectAll(".dc-legend-dot").remove();
+                svg.selectAll(".dc-legend-text").remove();
+
+            }
+
     }

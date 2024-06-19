@@ -33,3 +33,5 @@ text {
     font-size: 10px;
     pointer-events: none;
 }
+
+tspan { font-size: 10px; }

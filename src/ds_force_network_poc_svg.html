@@ -12,14 +12,15 @@
 <div class="container-fluid">
     <div class ="row">
         <div class = "col-8">
-            <h1 class="h1 text-center">hrX Data Model<small><small><small><small><small><small><small><small><small><button class="btn btn-sm btn-link" data-toggle="modal" data-target="#exampleModal" title="Show change log"><small><small>v0.1.2</small></small></button></small></small></small></small></small></small></small></small></small></h1>
+            <h1 class="h-1 text-center">hrX Data Model<small><small><small><small><small><small><small><small><small><button class="btn btn-sm btn-link" data-toggle="modal" data-target="#exampleModal" title="Show change log"><small><small>v0.1.3</small></small></button></small></small></small></small></small></small></small></small></small></h1>
         </div>
     </div>
+
     <div class="row vh-600">
         <div class = "col-8">
 
             <!--svg id="network" width="1200", height="600" style="border: 2px solid black"></svg-->
-            <svg id="network" class="h-100 w-100"  style="border: 2px solid black; min-height:900px">
+            <svg id="network" class="h-100 w-100 border"  style="min-height:900px">   <!--style="border: 2px solid black;-->
               <defs>
                   <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="4" refY="2" orient="auto">
                     <path d="M 0 0 L 4 2 L 0 4 z" fill="black"></path>
@@ -29,58 +30,114 @@
             </svg>
 
         </div>
-        <div class = "col-4">
-            <div class = "row">
-                <form>
-                  <div class="mb-3">
+        <div class = "col-4 border">
+
+            <div class = "row border">
+                <!--form-->
+
+                  <div class="col-5 mb-3">
                      <label for="chargeStrength" class="form-label" id="charge-strength-label">Charge strength</label>
                      <input type="range" class="form-range" min=-1000 max=200 id="chargeStrength" value=-208 onchange = "chargeStrengthSliderChanged(this.value)">
                   </div>
-                  <div class="mb-3">
+                  <div class="col-5 mb-3">
                      <label for="linkStrength" class="form-label" id="link-strength-label">Link strength</label>
                      <input type="range" class="form-range" min=0 max=2 step="0.1" id="linkStrength" value=0.2 onchange = "linkStrengthSliderChanged(this.value)">
                   </div>
-                  <div class="mb-3">
+
+                <!--/form-->
+            </div>
+            <div class="row border">
+                  <form>
+                  <lead>View</lead>
+                  <div class="mb-3 d-flex">
+
+                     <div class="form-group">
                       <input type="radio" class="btn-check" name="options" id="option1" autocomplete="off"  value="All" onclick="radioButtonClicked(this.value)">
                         <label class="btn" for="option1">All</label>
 
                         <input type="radio" class="btn-check" name="options" id="option2" autocomplete="off"  checked value="Modules" onclick="radioButtonClicked(this.value)">
                         <label class="btn" for="option2">Modules</label>
+                       </div>
+                    &nbsp;&nbsp;
+                    <div class="form-group">
 
+                <!--label for="search-select" class="control-label">View </label-->
+                  <select id="search-select2" class="form-select"  onchange="searchSelect2Changed(this);" aria-label="Default select example">
+                    <option value="Choose">Choose module..</option>
+                    <option value="Pay/Calc">Pay/calc Module</option>
+                    <option value="Payroll Verification">Payroll Verification Module</option>
+                    <option value="People">People Module</option>
+                    <option value="euHReka">euHReka Module</option>
+                    <option value="Core">Core Module</option>
+                    <option value="Benefits">Benefits Module</option>
+                    <option value="GCC">GCCs</option>
+                    <option value="LCC">LCCs</option>
+                    <option value="HRIS ID">HRIS Ids</option>``
+                  </select>
+                      </div>
 
-                        <input type="radio" class="btn-check" name="options" id="option4" autocomplete="off" value="Pay/Calc" onclick="radioButtonClicked(this.value)">
-                        <label class="btn" for="option4">Pay/Calc</label>
-
-                        <input type="radio" class="btn-check" name="options" id="option5" autocomplete="off" value="Housekeeping" onclick="radioButtonClicked(this.value)">
-                        <label class="btn" for="option5">Data Categories</label>
 
                   </div>
-                  <div class="mb-3">
-                      <div class="form-check">
-                          <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onclick="piiCheckboxClicked(this)">
-                          <label class="form-check-label" for="flexCheckDefault">
-                            Show PII
-                          </label>
+                  <!--div>
+                  <label for="search-select" class="control-label">View </label>
+                  <select id="search-select" class="form-select" onchange="searchSelectChanged(this);" aria-label="Default select example">
+                    <option value="All">All</option>
+                    <option value="Modules">Modules overview</option>
+                    <option value="Pay/Calc">&nbsp;&nbsp;Pay/calc Module</option>
+                    <option value="Payroll Verification">&nbsp;&nbsp;Payroll Verification Module</option>
+                    <option value="People">&nbsp;&nbsp;People Module</option>
+                    <option value="euHReka">&nbsp;&nbsp;euHReka Module</option>
+                    <option value="Core">&nbsp;&nbsp;Core Module</option>
+                    <option value="Benefits">&nbsp;&nbsp;Benefits Module</option>
+                    <option value="GCC">GCCs</option>
+                    <option value="LCC">LCCs</option>
+                    <option value="HRIS ID">HRIS Ids</option>``
+                  </select>
+                  </div-->
+                  </form>
+                  </div>  <!--// row?-->
+                  <div class="row">
+
+                      <div class="mb-3 mt-3 col-6">
+
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" value="" id="show-link-labels-cb" onclick="showLinkLabelsCheckboxClicked(this)">
+                              <label class="form-check-label" for="show-link-labels-cb">
+                                Show Relationships
+                              </label>
+
+                          </div>
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" onclick="piiCheckboxClicked(this)">
+                              <label class="form-check-label" for="flexCheckDefault">
+                                Show PII
+                              </label>
+
+                          </div>
+
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" value="" id="show-data-categories-cb" onclick="showDataCategoriesCheckboxClicked(this)">
+                              <label class="form-check-label" for="show-data-categories-cb">
+                                Show Data Categories
+                              </label>
+
+                          </div>
 
                       </div>
-                      <div class="form-check">
-                          <input class="form-check-input" type="checkbox" value="" id="show-link-labels-cb" onclick="showLinkLabelsCheckboxClicked(this)">
-                          <label class="form-check-label" for="show-link-labels-cb">
-                            Show Relationships
-                          </label>
-
+                      <div class="mt-2 col-6">
+                      <label for="aggregate-select" class="control-label"><lead>Group by</lead></label>
+                      <select id="aggregate-select" class="form-select" onchange="aggregateSelectChanged(this);" aria-label="Other select example">
+                        <option value="All">No aggregation</option>
+                        <option value="Data Category">Data Category</option>
+                        <option value="GCC">GCC</option>
+                        <option value="LCC">LCC</option>
+                        <option value="HRIS ID">HRIS Id</option>
+                      </select>
                       </div>
-                     <div class="form-check" id="attract-checkbox" style="visibility: hidden">
-                          <input class="form-check-input" type="checkbox" value="" id="attractDataType" onclick="attractDataTypeCheckboxClicked(this);">
-                          <label class="form-check-label" for="attractDataType">
-                            Group Data Types
-                          </label>
-
-                      </div>
-                  </div>
 
                 </form>
             </div>
+
             <div class = "row">
 
                  <div class="card" id="node-card" style="width: 30rem; visibility: hidden" >
@@ -98,6 +155,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <!-- Modal -->
@@ -122,6 +180,16 @@
           - Add relationship labels<br>
           - Add high level People module nodes/relationships<br>
           - Add descriptions for main Modules<br>
+          <hr>
+          <b>v0.1.3</b> (19/6/24)
+          <br>
+          <ul>
+            <li>Re-organise controls</li>
+            <li>Add aggregate functionality</li>
+            <li>Attempt to get paths for all Modules from cosmos gremlin db</li>
+            <li>Show data category colour legend</li>
+            <li>Add loading message</li>
+          </ul>
          </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -137,106 +205,137 @@
 <script src="./js/model.js"></script>
 <script>
 
-    useMyers = false;
+  useMyers = false;
 
-    zoom = d3.zoom()
-        .scaleExtent([0.1, 4])
-        .on("zoom", zoomed);
-
-
-    linkStrengthVal =  defaultLinkStrengthVal; //0.3
-    chargeStrengthVal  = defaultChargeStrengthVal;  //-344;
-
-    chargeStrengthUpdated();
-    linkStrengthUpdated();
-
-    levelUse =  'Modules';
-    levelUseChanged();
+  zoom = d3.zoom()
+    .scaleExtent([0.1, 4])
+    .on("zoom", zoomed);
 
 
-    useMyers = false;
+  linkStrengthVal = defaultLinkStrengthVal; //0.3
+  chargeStrengthVal = defaultChargeStrengthVal;  //-344;
 
-    //qq = rectX + (parseInt(svg.style("width")) / 2);
+  chargeStrengthUpdated();
+  linkStrengthUpdated();
 
-    svg.style("min-height", window.innerHeight - 100);
-    rect = document.getElementById("network").getBoundingClientRect();
-    width =  rect.width;
-    height = rect.height;
+  levelUse = 'Modules';
+  levelUseChanged();
 
+  searchVal = "Modules";
+  searchValUpdated();
 
-    svg.append("text") //.attr(x<text x="400" y="100" className="lead">Loading graph...</text>
-       .attr("x", rect.x + (parseInt(svg.style("width")) / 2))
-       .attr("y",rect.y + (parseInt(svg.style("height")) / 2) - 100)
-       .style("text-anchor", "middle")
-       .style("font-size", "34px")
-       .text("Loading graph...");
+  search2Val = "Choose";
+  search2ValUpdated();
 
-    queriesReturned = [false, false, false, false];
-
-    url = 'https://func-alg-t-weu-gremlin-api.azurewebsites.net/api/gremlinquery';
-
-    params = "query=g.V()";
-    callback = ajaxVerticesReturned;
-    retrieveVerticesStartTime = performance.now();
-    sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
-
-    params = "query=g.E()";
-    callback = ajaxEdgesReturned;
-    retrieveEdgesStartTime = performance.now();
-    sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
+  aggregateVal = "All";
+  aggregateValUpdated();
 
 
-    function assembleLinkedNodeParam(module, depth=5) {
-        return "query=g.V().has('name', '" + module + "').emit().repeat(out()).times(" + depth + ")";
-    }
+  useMyers = false;
 
-    var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
+  //qq = rectX + (parseInt(svg.style("width")) / 2);
 
-    modules.forEach((m) => {
-           var depth = (m == 'Pay/Calc' ? 5 : 7);
-           params = assembleLinkedNodeParam(m, depth=depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
-           callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
-           retrieveModuleStartTimes[m] = performance.now();
-           sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
-           });
-
-    // params = assembleLinkedNodeParam("Pay/Calc");  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
-    // callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
-    // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
-    //
-    //
-    // params =  assembleLinkedNodeParam("Payroll Verification", 7); //"query=g.V().has('name', 'Payroll Verification').emit().repeat(out()).times(7)";
-    // callback = callback = ajaxModuleLinksReturned; //ajaxEloiseLinksReturned;
-    // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
-    //
-    // params =  assembleLinkedNodeParam("Core", 7); //"query=g.V().has('name', 'Payroll Verification').emit().repeat(out()).times(7)";
-    // callback = callback = ajaxModuleLinksReturned; //ajaxEloiseLinksReturned;
-    // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
+  svg.style("min-height", window.innerHeight - 100);
+  rect = document.getElementById("network").getBoundingClientRect();
+  width = rect.width;
+  height = rect.height;
 
 
+  svg.append("text") //.attr(x<text x="400" y="100" className="lead">Loading graph...</text>
+    .attr("x", rect.x + (parseInt(svg.style("width")) / 2))
+    .attr("y", rect.y + (parseInt(svg.style("height")) / 2) - 100)
+    .style("text-anchor", "middle")
+    .style("font-size", "34px")
+    .attr("class", "loading-text")
+    .text("Loading graph...");
+
+  var curr_bounds = document.getElementById("network").getBoundingClientRect();
+  svg.append("image")
+    .attr("class", "loading-image")
+    .attr("x", curr_bounds.width / 2 - (150/2))
+    .attr("y", curr_bounds.height / 2)
+    .attr("width", "150")
+    .attr("height", "150")
+    .attr("href", "img/loading_animation.gif")
 
 
+  queriesReturned = [false, false, false, false];
 
-    if (useMyers) {
-        fetch('./data/myers_graph.json')
-            .then((response) => response.json())
-            .then((json) => setJsonNodes(json))
-            .then((g) => fullGraphLoaded(g));
-    }
-    else {
-        // fetch('./data/vertices.json')
-        //     .then((response) => response.json())
-        //     .then((json) => setNodes(json));
-    }
+  url = 'https://func-alg-t-weu-gremlin-api.azurewebsites.net/api/gremlinquery';
 
-    // fetch('./data/payCalcLinkedNodes.json')
+  params = "query=g.V()";
+  callback = ajaxVerticesReturned;
+  retrieveVerticesStartTime = performance.now();
+  sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+
+  params = "query=g.E()";
+  callback = ajaxEdgesReturned;
+  retrieveEdgesStartTime = performance.now();
+  sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+
+
+  function assembleLinkedNodeParam(module, depth = 5) {
+    return "query=g.V().has('name', '" + module + "').emit().repeat(out()).times(" + depth + ")";
+  }
+
+  var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
+
+  modules.forEach((m) => {
+    var depth = (m == 'Pay/Calc' ? 5 : 7);
+    params = assembleLinkedNodeParam(m, depth = depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
+    callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
+    retrieveModuleStartTimes[m] = performance.now();
+    sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+  });
+
+  function assembleLabelTargetParam(label) {
+    var q = `query=g.V().haslabel('Platform').repeat(out().simplePath()).until(hasLabel('${label}')).path().limit(20)`;
+    q += `&queryId=${label}`;
+    return q;
+  }
+
+  var labelTargets = ['GCC', 'LCC', 'HRIS ID'];
+
+  labelTargets.forEach((l) => {
+    var params = assembleLabelTargetParam(l);
+    var callback = ajaxLabelTargetReturned; //ajaxPayCalcLinksReturned;
+    retrieveLabelTargetStartTimes[l] = performance.now();
+    sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+  });
+
+
+  // params = assembleLinkedNodeParam("Pay/Calc");  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
+  // callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
+  // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
+  //
+  //
+  // params =  assembleLinkedNodeParam("Payroll Verification", 7); //"query=g.V().has('name', 'Payroll Verification').emit().repeat(out()).times(7)";
+  // callback = callback = ajaxModuleLinksReturned; //ajaxEloiseLinksReturned;
+  // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
+  //
+  // params =  assembleLinkedNodeParam("Core", 7); //"query=g.V().has('name', 'Payroll Verification').emit().repeat(out()).times(7)";
+  // callback = callback = ajaxModuleLinksReturned; //ajaxEloiseLinksReturned;
+  // sendAjax(url=url, params=params, callback=callback, method='GET', payload=null);
+
+
+  if (useMyers) {
+    fetch('./data/myers_graph.json')
+      .then((response) => response.json())
+      .then((json) => setJsonNodes(json))
+      .then((g) => fullGraphLoaded(g));
+  } else {
+    // fetch('./data/vertices.json')
     //     .then((response) => response.json())
-    //     .then((json) => setPayCalcLinkedNodes(json));
+    //     .then((json) => setNodes(json));
+  }
 
-      // fetch('./data/eloiseLinkedNodes.json')
-      //   .then((response) => response.json())
-      //   .then((json) => setEloiseLinkedNodes(json));
+  // fetch('./data/payCalcLinkedNodes.json')
+  //     .then((response) => response.json())
+  //     .then((json) => setPayCalcLinkedNodes(json));
 
+  // fetch('./data/eloiseLinkedNodes.json')
+  //   .then((response) => response.json())
+  //   .then((json) => setEloiseLinkedNodes(json));
 
 
 </script>
