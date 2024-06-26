@@ -46,7 +46,6 @@
         showDataCategoriesUpdated();
 
     }
-7
 
     function searchSelectChanged(el) {
          var val = el.options[el.selectedIndex].value;

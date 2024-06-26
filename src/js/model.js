@@ -33,6 +33,8 @@
 
     var zoom;
 
+    var testLock; // pii lock/unlock images
+
     var payCalcLinkedNodes;
     var payCalcLinkedIds;
     var eloiseLinkedIds;

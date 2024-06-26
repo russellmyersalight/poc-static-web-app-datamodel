@@ -6,6 +6,7 @@
         qq = Object.keys(n.properties);
         n.name = n.properties.name[0].value;
         var hasPII = false;
+        var hasEncrypted = false;
         qq.forEach((p) => {
             xx = n.properties[p][0].value;
             if (xx[0] == '{') {
@@ -15,10 +16,16 @@
                     if (xxx['isPII'] == 'Y') {
                         hasPII = true;
                     }
+                };
+                if ('isEncrypted' in xxx) {
+                    if (xxx['isEncrypted'] == 'Y') {
+                        hasEncrypted = true;
+                    }
                 }
             }
         });
         n.hasPII = hasPII;
+        n.hasEncrypted = hasEncrypted;
         if (qq.includes('DataType')) {
           n.DataType = n.properties.DataType[0].value;
         }

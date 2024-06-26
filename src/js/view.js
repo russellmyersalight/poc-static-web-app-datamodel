@@ -53,6 +53,9 @@
         text.attr("x", (d) => { return d.x + 10;})
             .attr("y", (d) => { return d.y});
 
+        testLock.attr("x", (d) => { return d.x-5})
+            .attr("y", (d) => { return d.y-5});
+
         linkLabel.attr("x", (d) => {
               var deltaX;
               if (d.target.x < d.source.x) {
@@ -238,6 +241,34 @@
             .enter().append("text")
             .attr('class', 'node-label')
             .text(function(d) {return d.name;});
+
+        testLock = container.select('.node-labels')
+          .selectAll("image")
+          .data(graph.nodes)
+          .enter().append("image")
+          .attr('class', 'node-lock-status')
+          .attr("href", function(d) {
+                if (d.hasPII) {
+                  if (d.hasEncrypted) {
+                    return "img/locked.png";
+                  }
+                  else {
+                    return "img/unlocked.png";
+                  }
+
+                }
+                else {
+                  return "";
+                }
+
+
+              })
+          .attr("x", curr_bounds.width / 2 - (150/2))
+          .attr("y", curr_bounds.height / 2)
+          .attr("width", "10")
+          .attr("height", "10")
+          .attr("pointer-events", "none")
+
 
 
         // try labels on links... not working yet
