@@ -175,6 +175,110 @@
     }
 
 
+    function getDataTypeFillColour(d) {
+          if (showDataCategories) {
+             if ('DataType' in d.properties) {
+               return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+             }
+             else {
+                  return d3.color("grey");//color("Unknown");
+             }
+             //return color("Housekeeping");
+           }
+           else {
+             return color(d.label);
+           }
+
+    }
+
+    function getNodeProperties(n) {
+                var ignoreProps = ['partitionKey', 'NodeDescription', 'name'];
+
+                var fieldPropsForTable = ['fieldName', 'format', 'isPII', 'isEncrypted']
+                var fieldProperties = [];
+                var nonFieldProperties = [];
+                for (var prop in n.properties) {
+                    if (Object.prototype.hasOwnProperty.call(n.properties, prop)) {
+                        if (ignoreProps.includes(prop)) {
+
+                        }
+                        else if (n.properties[prop][0].value[0] == '{') {
+                           var d = JSON.parse(n.properties[prop][0].value);
+                           var dd = {};
+                           dd["fieldName"] = prop;
+                           var otherProps = {};
+                           for (var k in d) {
+                               if (fieldPropsForTable.includes(k)) {
+                                 dd[k] = d[k];
+                               }
+                               else otherProps[k] = d[k];
+                           }
+                           dd["other"] = JSON.stringify(otherProps);
+
+                           fieldProperties.push(dd);
+                        }
+                        else {
+                            var d = [];
+                            d.push(prop);
+                            d.push(n.properties[prop][0].value);
+                            nonFieldProperties.push(d);
+                        }
+
+
+                    }
+                }
+
+                return {"fieldProperties": fieldProperties, "nonFieldProperties": nonFieldProperties};
+
+
+    }
+
+
+    function createTable(tabEl, data) {
+          // Create table element
+          //const table = document.createElement("table");
+
+          const table = tabEl;
+          tabEl.innerHTML = "";
+          if (data.length == 0) {
+            return;
+          }
+
+          //table.style.borderCollapse = "collapse";
+          //table.style.width = "100%";
+
+          // Create table header row
+          const headerRow = document.createElement("tr");
+          //const headers = Object.keys(data[0]);
+          const headers = ['fieldName', 'format', 'isPII', 'isEncrypted', 'other'];
+          headers.forEach(header => {
+            const th = document.createElement("th");
+            th.style.border = "1px solid #ddd";
+            th.style.padding = "8px";
+            th.style.textAlign = "left";
+            th.style.backgroundColor = "#f2f2f2";
+            th.textContent = header;
+            headerRow.appendChild(th);
+          });
+          table.appendChild(headerRow);
+
+          // Create table rows
+          data.forEach(item => {
+            const row = document.createElement("tr");
+            headers.forEach(header => {
+              const td = document.createElement("td");
+              td.style.border = "1px solid #ddd";
+              td.style.padding = "8px";
+              td.textContent = item[header];
+              row.appendChild(td);
+            });
+            table.appendChild(row);
+          });
+
+          // Append the table to the body or a specific element
+          //document.body.appendChild(table);
+    }
+
 
 
 

@@ -207,20 +207,22 @@
             //.attr("class", "node")
             .attr("r", r)
             .attr("fill", function(d) {
-                   //if (levelUse == 'Housekeeping') {
-                   if (showDataCategories) {
-                     if ('DataType' in d.properties) {
-                       return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
-                     }
-                     else {
-                          return d3.color("grey");//color("Unknown");
-                     }
-                     //return color("Housekeeping");
-                   }
-                   else {
-                     return color(d.label);
-                   }
-                  })
+              //  //if (levelUse == 'Housekeeping') {
+              //  if (showDataCategories) {
+              //    if ('DataType' in d.properties) {
+              //      return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+              //    }
+              //    else {
+              //         return d3.color("grey");//color("Unknown");
+              //    }
+              //    //return color("Housekeeping");
+              //  }
+              //  else {
+              //    return color(d.label);
+              //  }
+              // })
+                  return getDataTypeFillColour(d);
+            })
             .on("click", function() {
                 console.log("clicked node");
                 showCard(this);
@@ -263,8 +265,8 @@
 
 
               })
-          .attr("x", curr_bounds.width / 2 - (150/2))
-          .attr("y", curr_bounds.height / 2)
+          // .attr("x", curr_bounds.width / 2 - (150/2))
+          // .attr("y", curr_bounds.height / 2)
           .attr("width", "10")
           .attr("height", "10")
           .attr("pointer-events", "none")
@@ -561,31 +563,47 @@
 
     function showCard(node) {
                 n = node.__data__;
-                document.getElementById("node-card-title").innerHTML = n.name + " (<small><small>" + n.label + "</small></small>)";
-                document.getElementById("node-card-description").innerHTML = n.NodeDescription;
+                document.getElementById("node-card-title").innerHTML = n.name + "<br>(<small><small>" + n.label + "</small></small>)";
+                const defaultDescription = "Description of the node here ....";
+
+                document.getElementById("node-card-description").innerHTML = (n.NodeDescription == defaultDescription)? "" :n.NodeDescription;
 
                 var listGroup = document.getElementById("node-card-list-group");
                 listGroup.innerHTML = "";
 
+                var props = getNodeProperties(n);
+
+                var tab = document.getElementById("field-table");
+                createTable(tab, props["fieldProperties"]);
+
                 var ignoreProps = ['partitionKey', 'NodeDescription'];
-                for (var prop in n.properties) {
-                    if (Object.prototype.hasOwnProperty.call(n.properties, prop)) {
-                        if (ignoreProps.includes(prop)) {
+                // for (var prop in n.properties) {
+                //     if (Object.prototype.hasOwnProperty.call(n.properties, prop)) {
+                //         if (ignoreProps.includes(prop)) {
+                //
+                //         }
+                //         else {
+                //             propEl = document.createElement('li');
+                //             propEl.classList.add('list-group-item');
+                //             qq = n.properties.prop;
+                //             qqq = Object.keys(n.properties);
+                //             propEl.innerHTML = prop + ": " + n.properties[prop][0].value;
+                //             listGroup.appendChild(propEl);
+                //         }
+                //
+                //
+                //     }
+                // }
 
-                        }
-                        else {
-                            propEl = document.createElement('li');
-                            propEl.classList.add('list-group-item');
-                            qq = n.properties.prop;
-                            qqq = Object.keys(n.properties);
-                            propEl.innerHTML = prop + ": " + n.properties[prop][0].value;
-                            listGroup.appendChild(propEl);
-                        }
+                if (true) {
+                  for (var prop of props["nonFieldProperties"]) {
+                    propEl = document.createElement('li');
+                    propEl.classList.add('list-group-item');
+                    propEl.innerHTML = prop[0] + ": <b>" + prop[1] + "</b>";
+                    listGroup.appendChild(propEl);
+                  }
 
-
-                    }
                 }
-
 
                 document.getElementById("node-card").style.visibility = "visible";
     }

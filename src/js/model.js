@@ -177,7 +177,15 @@
 
       //document.getElementById("attract-checkbox").style.visibility = (showDataCategories) ? "visible" : "hidden";
 
-      levelUseChanged();
+      tst = container.selectAll(".nodes")
+                 .selectAll("circle")
+                .attr("fill", function(d) {
+
+                  return getDataTypeFillColour(d);
+                });
+
+
+      //levelUseChanged();
 
    }
 
