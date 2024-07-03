@@ -23,6 +23,9 @@
 
 
             function calcGrad(d) {
+                  if (d.target == d.source) {
+                    return {c:0, s: 0, grad: 0};
+                  }
                   var grad = (d.target.y - d.source.y)  / (d.target.x - d.source.x);
                   var angle = Math.atan(grad);
                   var gradDegrees = angle * 180 / Math.PI;
@@ -40,10 +43,23 @@
 
 
 
-        link.attr("x1", function(d) {return d.source.x  + calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)})
-            .attr("x2", function(d) {return d.target.x  - calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)  })
-            .attr("y1", function(d) {return d.source.y + calcGrad(d).s * r  * ((d.target.y >= d.source.y) ? 1 : -1) })
-            .attr("y2", function(d) {return d.target.y - calcGrad(d).s * r * ((d.target.y >= d.source.y) ? 1 : -1)  })
+        try {
+          link.attr("x1", function (d) {
+            return d.source.x + calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)
+          })
+            .attr("x2", function (d) {
+              return d.target.x - calcGrad(d).c * r * ((d.target.x >= d.source.x) ? 1 : -1)
+            })
+            .attr("y1", function (d) {
+              return d.source.y + calcGrad(d).s * r * ((d.target.y >= d.source.y) ? 1 : -1)
+            })
+            .attr("y2", function (d) {
+              return d.target.y - calcGrad(d).s * r * ((d.target.y >= d.source.y) ? 1 : -1)
+            })
+        }
+        catch (e) {
+              var qq = 1;
+        }
 
 
         node.attr("cx", (d) => { return d.x;})
@@ -105,10 +121,25 @@
             graph = {nodes: gUse.nodes, links: gUse.links};
         }
         else {
+            isIndividualLevel = false;
+            individualLevelType = null;
+
             if (levelUse in ["GCC", "LCC", "HRIS ID"]) {
                 gUse = JSON.parse(JSON.stringify(fullGraph));
-                var linkedIds = linkedNodeIds[searchVal];
+                var linkedIds = linkedNodeIds[search2Val];
                 gUse = graphWithIds(gUse.jV, gUse.jE, linkedIds);
+            }
+            else if (levelUse == 'Definitions') {
+                // gUse = JSON.parse(JSON.stringify(fullGraph));
+                // var linkedIds = definitionIds['Client'];
+                // //var clientDefNodeId = 'd4f2e6c2-2d6e-4c8f-aeaf-e963617d5e09'
+                // //var both =  [clientDefNodeId].concat(linkedIds);
+                // var both = linkedIds;
+                // gUse = graphWithIds(gUse.jV, gUse.jE, both);
+                gUse = JSON.parse(JSON.stringify(fullGraph));
+                gUse = graphWithLabels(gUse.jV, gUse.jE, ['Definition']); //, 'GCC', 'HRIS ID']);
+
+
             }
             else if (levelUse ==  'All') {
                 gUse = JSON.parse(JSON.stringify(fullGraph));
@@ -120,15 +151,38 @@
             else if (levelUse == 'Housekeeping') {
               gUse = JSON.parse(JSON.stringify(fullGraph));
             }
-            else { // double click on module
-            //else if (levelUse == 'Pay/Calc') {
-                gUse = JSON.parse(JSON.stringify(fullGraph));
-                hrXPlatformNodeId = '5e2547ae-4cfe-4483-ae94-62237ca01c11';  // '075c5d82-2ed5-4dd8-b092-9a8983f2fc2f' (Persons graph)
-                hrXRootNodes = nodeIdsDirectlyConnectedTo(gUse, hrXPlatformNodeId);
-                combined = [hrXPlatformNodeId];
-                var linkedIds = linkedNodeIds[levelUse];
+            else { // double click on individual module or select individual module in dropdown
+              //else if (levelUse == 'Pay/Calc') {
+              isIndividualLevel = true;
+              gUse = JSON.parse(JSON.stringify(fullGraph));
+              hrXPlatformNodeId = '5e2547ae-4cfe-4483-ae94-62237ca01c11';  // '075c5d82-2ed5-4dd8-b092-9a8983f2fc2f' (Persons graph)
+              hrXRootNodes = nodeIdsDirectlyConnectedTo(gUse, hrXPlatformNodeId);
+              combined = [hrXPlatformNodeId];
+              var qqSplit = levelUse.split('//')
+              var linkedIds;
+              if (qqSplit.length == 2) {
+                individualLevelType = qqSplit[0];
+                var qqNode = qqSplit[1];
+                if (individualLevelType == 'definition') {
+                    linkedIds = definitionIds[qqNode];
+                    both = linkedIds;
+                }
+                else { // Module
+                  console.log("linked node ids for node: " + qqNode + " is: " + linkedNodeIds[qqNode]);
+                  if (linkedNodeIds[qqNode] == null) {
+                    alert("whoops");
+                  }
+                  linkedIds = linkedNodeIds[qqNode];
+                  both = combined.concat(hrXRootNodes.concat(linkedIds));
+                }
+
+              }
+              else {
+                linkedIds = linkedNodeIds[levelUse];
                 both = combined.concat(hrXRootNodes.concat(linkedIds));  //payCalcLinkedIds));
-                gUse = graphWithIds(gUse.jV, gUse.jE, both);
+              }
+              //both = combined.concat(hrXRootNodes.concat(linkedIds));  //payCalcLinkedIds));
+              gUse = graphWithIds(gUse.jV, gUse.jE, both);
             }
             // else {
             //     gUse = JSON.parse(JSON.stringify(fullGraph));
@@ -319,6 +373,26 @@
 
     }
 
+    function getCentreForceForModuleName(d) {
+
+          //return null;  // #TODO   <==== change this if needing actual force strength
+
+          var positions = {"Pay/Calc": [1, 1], "Benfits": [4, 1], "People": [1, 4], "Payroll Verification": [4, 4], "Core": [4,3], "Workday": [2.5, 4]}
+          if ('ModuleName' in d.properties) {
+             var modName = d.properties['ModuleName'][0].value;
+             if (modName in positions) {
+               return positions[modName];
+             }
+             else {
+               return null;
+             }
+
+          }
+          else {
+            return null;
+          }
+
+    }
 
     function changeChargeOrLinkStrength(value) {
 
@@ -333,6 +407,7 @@
                 //.force("x", d3.forceX(width / 2))
                 //.force("y", d3.forceY(height / 2))
                 .force("x",d3.forceX(function(d) {
+
                      if  (aggregateVal == 'Data Category') {//((levelUse == "Housekeeping") && (attractDataTypes)) {
                          if (d.DataType == 'Master Data') {
                             return width / 5 * 1;
@@ -348,7 +423,17 @@
                          }
                      }
                      else if (aggregateVal == 'All') {
-                           return (width / 2);
+                          if (((isIndividualLevel) && (individualLevelType == 'definition')) || (levelUse == 'All')) {
+                            var modNameCentreForce = getCentreForceForModuleName(d);
+                            if (!(modNameCentreForce == null)) {
+                              return width / 5 * modNameCentreForce[0];
+                            } else {
+                              return (width / 2);
+                            }
+                          }
+                          else {
+                              return (width / 2);
+                          }
                      }
                      else {
                         if (d.label == aggregateVal) {
@@ -369,6 +454,10 @@
                     // }
                   }))
                 .force("y", d3.forceY(function(d) {
+                     // var modNameCentreForce = getCentreForceForModuleName(d);
+                     // if (!(modNameCentreForce == null)) {
+                     //     return width / 5 * modNameCentreForce[1];
+                     // }
                     if  (aggregateVal == "Data Category") {//((levelUse == "Housekeeping")  && (attractDataTypes)) {
                          if (d.DataType == 'Master Data') {
                             return height / 5 * 1;
@@ -384,7 +473,18 @@
                          }
                      }
                      else if (aggregateVal == 'All') {
-                           return (height / 2);
+                          if (((isIndividualLevel) && (individualLevelType == 'definition')) || (levelUse == 'All')) {
+                            var modNameCentreForce = getCentreForceForModuleName(d);
+                            if (!(modNameCentreForce == null)) {
+                              return height / 5 * modNameCentreForce[1];
+                            } else {
+                              return (height / 2);
+                            }
+                          }
+                          else {
+                              return (height / 2);
+                          }
+
                      }
 
                      else {
@@ -576,6 +676,8 @@
                 var tab = document.getElementById("field-table");
                 createTable(tab, props["fieldProperties"]);
 
+                var moduleNameProp = "ModuleName";
+
                 var ignoreProps = ['partitionKey', 'NodeDescription'];
                 // for (var prop in n.properties) {
                 //     if (Object.prototype.hasOwnProperty.call(n.properties, prop)) {
@@ -595,12 +697,28 @@
                 //     }
                 // }
 
+                props["nonFieldProperties"].forEach((prop) => {
+                     if (prop[0] == moduleNameProp) {
+                               propEl = document.createElement('li');
+                               propEl.classList.add('list-group-item');
+                               propEl.innerHTML = prop[0] + ": <b>" + prop[1] + "</b>";
+                               listGroup.appendChild(propEl);
+
+                     }
+                });
+
+
                 if (true) {
                   for (var prop of props["nonFieldProperties"]) {
-                    propEl = document.createElement('li');
-                    propEl.classList.add('list-group-item');
-                    propEl.innerHTML = prop[0] + ": <b>" + prop[1] + "</b>";
-                    listGroup.appendChild(propEl);
+                    if (prop[0] == moduleNameProp) {
+
+                    }
+                    else {
+                      propEl = document.createElement('li');
+                      propEl.classList.add('list-group-item');
+                      propEl.innerHTML = prop[0] + ": <b>" + prop[1] + "</b>";
+                      listGroup.appendChild(propEl);
+                    }
                   }
 
                 }

@@ -14,7 +14,7 @@
 <div class="container-fluid">
     <div class ="row">
         <div class = "col-8">
-            <h1 class="h-1 text-center">hrX Data Model<small><small><small><small><small><small><small><small><small><button class="btn btn-sm btn-link" data-toggle="modal" data-target="#exampleModal" title="Show change log"><small><small>v0.1.5</small></small></button></small></small></small></small></small></small></small></small></small></h1>
+            <h1 class="h-1 text-center">hrX Data Model<small><small><small><small><small><small><small><small><small><button class="btn btn-sm btn-link" data-toggle="modal" data-target="#exampleModal" title="Show change log"><small><small>v0.1.6</small></small></button></small></small></small></small></small></small></small></small></small></h1>
         </div>
     </div>
 
@@ -53,12 +53,14 @@
                   <lead>View</lead>
                   <div class="mb-3 d-flex">
 
-                     <div class="form-group">
+                     <div class="form-group col-md-9 col-lg-8">
                       <input type="radio" class="btn-check" name="options" id="option1" autocomplete="off"  value="All" onclick="radioButtonClicked(this.value)">
                         <label class="btn" for="option1">All</label>
-
+                       <input type="radio" class="btn-check" name="options" id="option3" autocomplete="off"  value="Definitions" onclick="radioButtonClicked(this.value)">
+                        <label class="btn" for="option3">Concepts</label>
+                        <!--span>&nbsp;&nbsp;&nbsp;&nbsp;</span-->
                         <input type="radio" class="btn-check" name="options" id="option2" autocomplete="off"  checked value="Modules" onclick="radioButtonClicked(this.value)">
-                        <label class="btn" for="option2">Overview</label>
+                        <label class="btn" for="option2">Modules</label>
                        </div>
                     &nbsp;&nbsp;
                     <div class="form-group">
@@ -72,11 +74,12 @@
                     <option value="euHReka">euHReka Module</option>
                     <option value="Core">Core Module</option>
                     <option value="Benefits">Benefits Module</option>
-                    <option value="GCC">GCCs</option>
+                    <!--option value="GCC">GCCs</option>
                     <option value="LCC">LCCs</option>
-                    <option value="HRIS ID">HRIS Ids</option>``
+                    <option value="HRIS ID">HRIS Ids</option-->
                   </select>
                       </div>
+
 
 
                   </div>
@@ -131,9 +134,9 @@
                       <select id="aggregate-select" class="form-select" onchange="aggregateSelectChanged(this);" aria-label="Other select example">
                         <option value="All">No aggregation</option>
                         <option value="Data Category">Data Category</option>
-                        <option value="GCC">GCC</option>
+                        <!--option value="GCC">GCC</option>
                         <option value="LCC">LCC</option>
-                        <option value="HRIS ID">HRIS Id</option>
+                        <option value="HRIS ID">HRIS Id</option-->
                       </select>
                       </div>
 
@@ -152,8 +155,8 @@
                       </ul>
                       <div class="table-responsive" id="field-table-div">
                           <table class="table table-borderless bsb-table-xl text-nowrap align-middle m-0" id="field-table">
-              </table>
-            </div>
+                          </table>
+                      </div>
                        <!--/div-->
 
 
@@ -213,6 +216,16 @@
           <ul>
             <li>show table fields in html table format when clicking on a node</li>
           </ul>
+          <hr>
+          <b>v0.1.6</b> (3/7/24)
+          <br>
+          <ul>
+            <li>Add Concepts (Definitions) view and functionality</li>
+            <li>Add "ModuleName" property</li>
+            <li> Colour all nodes of a module same colour if "All" level or  individual "Definitions" level</li>
+            <li>Attract nodes  of a module together if "All" level or individual "Definitions" level</li>
+
+          </ul>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -244,8 +257,8 @@
   levelUse = 'Modules';
   levelUseChanged();
 
-  searchVal = "Modules";
-  searchValUpdated();
+  //searchVal = "Modules";
+  //searchValUpdated();
 
   search2Val = "Choose";
   search2ValUpdated();
@@ -328,6 +341,22 @@
     var callback = ajaxLabelTargetReturned; //ajaxPayCalcLinksReturned;
     retrieveLabelTargetStartTimes[l] = performance.now();
     sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+  });
+
+  function assembleDefinitionsTargetParam(definition) {
+    var q =  "query=g.V().hasLabel('Definition').has('name', '" + definition + "').emit().repeat(out()).times(3)"; //"query=g.V().hasLabel('Definition').has('name', '" + definition + "').repeat(out()).times(2)";
+    q+= `&queryId=${definition}`;
+    return q;
+  }
+
+
+  var definitionTargets = ['Client', 'Legal Entity Grouping', 'Legal Entity', 'Country', 'Payee', 'Pay Group', 'Pay Cycle', 'HRIS Id']
+  definitionTargets.forEach((d) => {
+     var params = assembleDefinitionsTargetParam(d);
+     var callback = ajaxDefinitionLinksReturned; //ajaxPayCalcLinksReturned;
+     retrieveDefinitionStartTimes[d] = performance.now();
+     sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+
   });
 
 

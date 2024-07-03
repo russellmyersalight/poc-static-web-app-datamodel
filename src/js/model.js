@@ -22,6 +22,9 @@
     var graph;
     var levelUse; // = 'Modules' ; // 'All'; //Modules
 
+    var isIndividualLevel = false;  // if drilling down on individual module or definition
+    var individualLevelType = null;   // if isIndividualLevel, is it "module" or "definition" level
+
     var link;
     var node;
     var text;
@@ -39,6 +42,7 @@
     var payCalcLinkedIds;
     var eloiseLinkedIds;
     var linkedNodeIds = {};
+    var definitionIds = {};
 
     var colours
          = {"Configuration Data": "blue",
@@ -50,8 +54,9 @@
 
     var showLinkLabels = false;
     var showDataCategories = false;
+    var showModuleColours = true;
 
-    var searchVal;
+    //var searchVal;
     var search2Val;
     var aggregateVal;
 
@@ -81,6 +86,9 @@
     var retrieveModuleEndTimes = {};
     var retrieveLabelTargetStartTimes = {};
     var retrieveLabelTargetEndTimes = {};
+    var retrieveDefinitionStartTimes = {};
+    var retrieveDefinitionEndTimes = {};
+
 
 
 
@@ -98,6 +106,7 @@
         changeChargeOrLinkStrength();
         showChargeStrength();
     }
+
 
 
    function levelUseChanged() {
@@ -190,25 +199,25 @@
    }
 
 
-   function searchValUpdated() {
-      //document.getElementById("search-select").value = searchVal;
-      levelUse = searchVal;
-      levelUseChanged();
-      //initialiseGraph();
-
-   }
+   // function searchValUpdated() {
+   //    //document.getElementById("search-select").value = searchVal;
+   //    levelUse = searchVal;
+   //    levelUseChanged();
+   //    //initialiseGraph();
+   //
+   // }
 
     function search2ValUpdated() {
       document.getElementById("search-select2").value = search2Val;
       if (search2Val == "Choose") {
-        searchVal = "Modules";
-         levelUse = "Modules";
+        //searchVal = "Modules";
+         //levelUse = "Modules";
       }
       else {
-        searchVal = search2Val;
-        levelUse = search2Val;
+        //searchVal = search2Val;
+        levelUse = 'module//' + search2Val;
       }
-      searchValUpdated();
+      //searchValUpdated();
       levelUseChanged();
       //initialiseGraph();
 

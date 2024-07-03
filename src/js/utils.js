@@ -176,18 +176,55 @@
 
 
     function getDataTypeFillColour(d) {
+
           if (showDataCategories) {
-             if ('DataType' in d.properties) {
-               return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+              if ('DataType' in d.properties) {
+                return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+              } else {
+                return d3.color("grey");//color("Unknown");
+              }
+              //return color("Housekeeping");
+            } else {
+             if (showModuleColours) {
+                if (((isIndividualLevel) && (individualLevelType == 'definition')) || (levelUse == 'All')) {
+                  if ('ModuleName' in d.properties) {
+                    return color(d.properties['ModuleName'][0].value);
+                  } else {
+                    return color(d.label);
+                  }
+                }
+                else {
+                   return color(d.label);
+                }
              }
              else {
-                  return d3.color("grey");//color("Unknown");
-             }
-             //return color("Housekeeping");
-           }
-           else {
-             return color(d.label);
-           }
+                return color(d.label);
+            }
+          }
+
+
+          // if (showModuleColours) {
+          //   if ('ModuleName' in d.properties) {
+          //     return color(d.properties['ModuleName'][0].value);
+          //   }
+          //   else {
+          //     return color(d.label);
+          //   }
+          //
+          // }
+          // else {
+          //
+          //   if (showDataCategories) {
+          //     if ('DataType' in d.properties) {
+          //       return d3.color(colours[d.properties['DataType'][0].value]); //color(d.properties['DataType'][0].value);
+          //     } else {
+          //       return d3.color("grey");//color("Unknown");
+          //     }
+          //     //return color("Housekeeping");
+          //   } else {
+          //     return color(d.label);
+          //   }
+          // }
 
     }
 
@@ -292,6 +329,18 @@
          var idSet = new Set(ids);
          var idAr = Array.from(idSet);
          linkedNodeIds[identifier] = idAr;
+         return idAr;
+
+   }
+
+    function setDefinitionLinkedNodeIds(j, identifier) {
+         var ids = [];
+         j.forEach((item) => {
+             ids.push(item.id);
+         });
+         var idSet = new Set(ids);
+         var idAr = Array.from(idSet);
+         definitionIds[identifier] = idAr;
          return idAr;
 
    }

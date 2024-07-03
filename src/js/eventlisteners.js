@@ -14,7 +14,7 @@
 
 
     function radioButtonClicked(value) {
-        if ((value == "All") || (value == "Modules")) {
+        if ((value == "All") || (value == "Modules") || (value=="Definitions")) {
           search2Val = "Choose";
           search2ValUpdated();
         }
@@ -47,11 +47,11 @@
 
     }
 
-    function searchSelectChanged(el) {
-         var val = el.options[el.selectedIndex].value;
-         searchVal = val;
-         searchValUpdated();
-    }
+    // function searchSelectChanged(el) {
+    //      var val = el.options[el.selectedIndex].value;
+    //      searchVal = val;
+    //      searchValUpdated();
+    // }
 
     function searchSelect2Changed(el) {
          var val = el.options[el.selectedIndex].value;
@@ -143,27 +143,40 @@
            if (n.label == 'Module') {
                if (expandedNode == n.name) {
                    expandedNode = null;
-                   searchVal = 'Modules';
-                   search2Val = 'Modules';
+                   //searchVal = 'Modules';
+                   search2Val = 'Choose';
                    levelUse = 'Modules';
                } else {
                    expandedNode = n.name;
-                   searchVal = n.name;
+                   //searchVal = n.name;
                    search2Val = n.name;
-                   levelUse = n.name;
+                   levelUse = 'module//' + n.name;
                }
+
 
            }
            else if (n.label == 'Platform') {
                 expandedNode = null;
-                searchVal = 'Modules';
-                search2Val = 'Modules';
+                //searchVal = 'Modules';
+                search2Val = 'Choose';
                 levelUse = 'Modules';
 
            }
+           else if (n.label == 'Definition') {
+               console.log("Definition double clicked");
+               if (expandedNode == n.name) {
+                 expandedNode = null;
+                 levelUse = 'Definitions';
+               }
+               else {
+                 expandedNode = n.name;
+                 //search2Val = 'Choose';
+                 levelUse = 'definition//' + n.name;
+               }
+           }
 
 
-           searchValUpdated();
+           //searchValUpdated();
            search2ValUpdated();
            levelUseChanged();
     }
@@ -394,6 +407,32 @@
 
     }
 
+     function ajaxDefinitionLinksReturned(xmlhttp) {
+        var parsed = JSON.parse(xmlhttp.responseText);
+
+        var definition = parsed.Query.slice(42);
+        var endInd = definition.indexOf("'");
+        definition = definition.slice(0, endInd);
+
+
+        retrieveDefinitionEndTimes[definition] = performance.now();
+        var timeTaken= ((retrieveDefinitionEndTimes[definition] - retrieveDefinitionStartTimes[definition]) / 1000).toFixed(1);
+
+        flattened = flattenAr(parsed["Result"]);
+
+        //flattenedObs = flattenObjects(flattened);
+
+
+        console.log('ajax Definition links retrieved for query: ' + parsed.Query + ' Number of paths: ' + flattened.length   + " Time taken:  "  + timeTaken + "s"); //+ ' Number of links: ' + flattenedObs.length + " Time taken:  "  + timeTaken + "s");
+
+        definitionIds[definition] = setDefinitionLinkedNodeIds(flattened, definition);
+        //linkedNodeIds[label] = setLinkedNodeIds(flattenedObs, label);
+        //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);
+
+
+        return parsed
+
+    }
 
 
     function fullGraphLoaded(g) {
