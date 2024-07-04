@@ -228,6 +228,36 @@
 
     }
 
+    function getNodeClass(d) {
+
+           if (showPII) {
+             return d.hasPII ? "node-pii" :"node-light";
+           }
+           else {
+             if (d.label == 'Definition') {
+                 if (definitionIds[d.name] == null) {
+                   return "node";
+                 }
+                 else {
+                   return "node-loaded";
+                 }
+             }
+             else if (d.label == 'Module') {
+
+                if (linkedNodeIds[d.name] == null) {
+                     return "node";
+                   }
+                   else {
+                     return "node-loaded";
+                   }
+             }
+             else {
+               return "node";
+             }
+           }
+
+    }
+
     function getNodeProperties(n) {
                 var ignoreProps = ['partitionKey', 'NodeDescription', 'name'];
 
@@ -398,6 +428,63 @@
         return flattened;
 
     }
+
+
+    function assembleLinkedNodeParam(module, depth = 5) {
+      return "query=g.V().has('name', '" + module + "').emit().repeat(out()).times(" + depth + ")";
+    }
+
+
+    function assembleLabelTargetParam(label) {
+      var q = `query=g.V().haslabel('Platform').repeat(out().simplePath()).until(hasLabel('${label}')).path().limit(20)`;
+      q += `&queryId=${label}`;
+      return q;
+    }
+
+
+
+    function assembleDefinitionsTargetParam(definition) {
+      var q = "query=g.V().hasLabel('Definition').has('name', '" + definition + "').emit().repeat(out()).times(3)"; //"query=g.V().hasLabel('Definition').has('name', '" + definition + "').repeat(out()).times(2)";
+      q += `&queryId=${definition}`;
+      return q;
+    }
+
+    function retrieveSecondaryItems() {
+         var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
+
+        modules.forEach((m) => {
+          //var depth = ((m == 'Pay/Calc')  ? 5 : 7);
+          //if (m == 'Payroll Verification') {
+          //  depth = 10;
+          //}
+          var depth = 12;
+          params = assembleLinkedNodeParam(m, depth = depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
+          callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
+          retrieveModuleStartTimes[m] = performance.now();
+          sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+        });
+
+        var labelTargets = ['GCC', 'LCC', 'HRIS ID'];
+
+        labelTargets.forEach((l) => {
+          var params = assembleLabelTargetParam(l);
+          var callback = ajaxLabelTargetReturned; //ajaxPayCalcLinksReturned;
+          retrieveLabelTargetStartTimes[l] = performance.now();
+          sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+        });
+
+        var definitionTargets = ['Client', 'Legal Entity Grouping', 'Legal Entity', 'Country', 'Payee', 'Pay Group', 'Pay Cycle', 'HRIS Id']
+        definitionTargets.forEach((d) => {
+          var params = assembleDefinitionsTargetParam(d);
+          var callback = ajaxDefinitionLinksReturned; //ajaxPayCalcLinksReturned;
+          retrieveDefinitionStartTimes[d] = performance.now();
+          sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+
+        });
+
+    }
+
+
 
 
    function sendAjax(url, params, callback, method='GET', payload=null) {

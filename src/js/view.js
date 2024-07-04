@@ -165,12 +165,18 @@
                 var qqNode = qqSplit[1];
                 if (individualLevelType == 'definition') {
                     linkedIds = definitionIds[qqNode];
+                    if (linkedIds == null) {
+                      document.getElementById("loading-alert").style.display="block";
+                      return;
+                    }
                     both = linkedIds;
                 }
                 else { // Module
                   console.log("linked node ids for node: " + qqNode + " is: " + linkedNodeIds[qqNode]);
                   if (linkedNodeIds[qqNode] == null) {
-                    alert("whoops");
+                      //alert("whoops");
+                      document.getElementById("loading-alert").style.display="block";
+                      return;
                   }
                   linkedIds = linkedNodeIds[qqNode];
                   both = combined.concat(hrXRootNodes.concat(linkedIds));
@@ -257,7 +263,9 @@
             .selectAll("circle")
             .data(graph.nodes)
             .enter().append("circle")
-            .attr("class", function(d) { if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}})
+            .attr("class", function(d)  {
+                return getNodeClass(d);  //{ if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}})
+            })
             //.attr("class", "node")
             .attr("r", r)
             .attr("fill", function(d) {
@@ -727,10 +735,22 @@
     }
 
     function showPIIChanged() {
-                tst = container.selectAll(".nodes")
-                 .selectAll("circle")
-                 .attr("class", function(d) { if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}});
+             setNodeClasses();
+                // tst = container.selectAll(".nodes")
+                //  .selectAll("circle")
+                //  .attr("class", function(d)  {
+                //       return getNodeClass(d);  //{ if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}})
+                //   })
     }
+
+    function setNodeClasses() {
+             tst = container.selectAll(".nodes")
+                 .selectAll("circle")
+                 .attr("class", function(d)  {
+                      return getNodeClass(d);  //{ if (showPII) {return d.hasPII ? "node-pii" :"node-light";} else {return "node"}})
+                  })
+    }
+
 
     function showChargeStrength() {
         document.getElementById("charge-strength-label").innerHTML = "Charge strength <small><small><small>(" + chargeStrengthVal + ")</small></small></small>"

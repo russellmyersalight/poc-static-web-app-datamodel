@@ -141,6 +141,15 @@
 
     function nodeDoubleClicked(n) {
            if (n.label == 'Module') {
+               console.log("Module double clicked");
+               console.log("Module ids for " + n.name + " : " + linkedNodeIds[n.name]);
+               console.log("Current expanded node val: " + expandedNode);
+               if (linkedNodeIds[n.name] == null) {
+                 console.log("module ids is null");
+                 document.getElementById("loading-alert").style.display="block";
+                 return;
+               }
+
                if (expandedNode == n.name) {
                    expandedNode = null;
                    //searchVal = 'Modules';
@@ -164,12 +173,24 @@
            }
            else if (n.label == 'Definition') {
                console.log("Definition double clicked");
+               console.log("Definition ids for " + n.name + " : " + definitionIds[n.name]);
+               console.log("Current expanded node val: " + expandedNode);
+               if (definitionIds[n.name] == null) {
+                 console.log("def ids is null");
+                 document.getElementById("loading-alert").style.display="block";
+                 return;
+               }
+               // else {
+               //   console.log("def ids not null");
+               // }
+
                if (expandedNode == n.name) {
                  expandedNode = null;
                  levelUse = 'Definitions';
                }
                else {
                  expandedNode = n.name;
+
                  //search2Val = 'Choose';
                  levelUse = 'definition//' + n.name;
                }
@@ -329,6 +350,7 @@
         //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);
 
         updateNodeLabels(); // to show exclamation mark when module loaded
+        setNodeClasses(); // highlight nodes when loaded
 
         return parsed
 
@@ -429,6 +451,7 @@
         //linkedNodeIds[label] = setLinkedNodeIds(flattenedObs, label);
         //payCalcLinkedIds = setPayCalcLinkedNodes(flattened);
 
+        setNodeClasses(); // highlight nodes when loaded
 
         return parsed
 
@@ -439,8 +462,11 @@
         console.log("Full graph loaded");
         svg.selectAll("text").remove();
         svg.selectAll(".loading-image").remove();
-        fullGraph = g;
 
+        retrieveSecondaryItems(); // kick off load of detailed module nodes/edges etc
+
+
+        fullGraph = g;
 
         initialiseGraph();
 
