@@ -32,6 +32,20 @@
         else {
           n.DataType = "Unknown";
         }
+        if (qq.includes('Table')) {
+          n.Table = n.properties.Table[0].value;
+        }
+        else {
+          n.Table = "";
+        }
+        if (qq.includes('ModuleName')) {
+          n.ModuleName = n.properties.ModuleName[0].value;
+        }
+        else {
+          n.ModuleName = "";
+        }
+
+
         if (qq.includes('NodeDescription')) {
           n.NodeDescription = n.properties.NodeDescription[0].value;
         }
@@ -172,6 +186,17 @@
         });
         return ids;
 
+    }
+
+    function nodesWithModuleName(g, moduleName) {
+          var nodes = [];
+          g["jV"].forEach((n) => {
+              if (n.ModuleName == moduleName) {
+                nodes.push(n);
+              }
+
+          });
+          return nodes;
     }
 
 
@@ -452,17 +477,19 @@
     function retrieveSecondaryItems() {
          var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
 
-        modules.forEach((m) => {
-          //var depth = ((m == 'Pay/Calc')  ? 5 : 7);
-          //if (m == 'Payroll Verification') {
-          //  depth = 10;
-          //}
-          var depth = 12;
-          params = assembleLinkedNodeParam(m, depth = depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
-          callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
-          retrieveModuleStartTimes[m] = performance.now();
-          sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
-        });
+        if (false) {
+          modules.forEach((m) => {
+            //var depth = ((m == 'Pay/Calc')  ? 5 : 7);
+            //if (m == 'Payroll Verification') {
+            //  depth = 10;
+            //}
+            var depth = 12;
+            params = assembleLinkedNodeParam(m, depth = depth);  //"query=g.V().has('name', 'Pay/Calc').emit().repeat(out()).times(5)";
+            callback = ajaxModuleLinksReturned; //ajaxPayCalcLinksReturned;
+            retrieveModuleStartTimes[m] = performance.now();
+            sendAjax(url = url, params = params, callback = callback, method = 'GET', payload = null);
+          });
+        }
 
         var labelTargets = ['GCC', 'LCC', 'HRIS ID'];
 

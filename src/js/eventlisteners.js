@@ -217,7 +217,54 @@
     }
 
 
+    function ajaxVerticesAndEdgesReturned(xmlhttp) {
+          console.log("Vertices+Edges load api call ended: " + Date());
+          document.getElementsByClassName('loading-text')[0].innerHTML = "Loading..<tspan>Vertices and Edges loaded</tspan>"
+          retrieveVerticesEndTime = performance.now();
+          var parsed = JSON.parse(xmlhttp.responseText);
+
+          queriesReturned[0] = true;
+          queriesReturned[1] = true;
+
+          jAll = parsed["Result"];
+          jNodes = jAll["g.V()"];
+          jEdges = jAll["g.E()"];
+
+          var flattenedNodes = flattenAr(jNodes);
+          var flattenedEdges = flattenAr(jEdges);
+
+          console.log('ajax Vertices+Edges retrieved for query: ' + parsed.Query + ' Number of Vertices: ' + flattenedNodes.length  + ' Number of Edges: ' + flattenedEdges.length + ' time taken: ' + ((retrieveVerticesEndTime - retrieveVerticesStartTime) / 1000).toFixed(1) + 's');
+
+          flattenedNodes.forEach((n) => convNode(n));
+          flattenedEdges.forEach((e) => convEdge(e));
+
+          if ((queriesReturned[0]) && (queriesReturned[1])) {  // Full Nodes and Vertices loaded
+              g = {"jV": flattenedNodes, "jE": flattenedEdges};
+              fullGraphLoaded(g);
+
+              var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
+              modules.forEach((m) => {
+                  var nodes = nodesWithModuleName(g, m);
+                  linkedNodeIds[m] = setLinkedNodeIds(nodes, m);
+                  updateNodeLabels(); // to show exclamation mark when module loaded
+                  setNodeClasses(); // highlight nodes when loaded
+              });
+
+          }
+
+          if (allQueriesReturned()) {
+               console.log("QDone - last 0");
+               //g = {"jV": fullV, "jE": fullE};
+               //fullGraphLoaded(g);
+         }
+         return parsed
+
+    }
+
     function ajaxVerticesReturned(xmlhttp) {
+        // Deprecated - now uses ajaxVerticesAndEdgesReturned
+
+        console.log("Vertices load api call ended: " + Date());
         //document.getElementsByClassName('loading-text')[0].innerHTML = "<p>Loading...<br>vertices loaded</p>"
        document.getElementsByClassName('loading-text')[0].innerHTML = "Loading..<tspan>Vertices loaded</tspan>"
         retrieveVerticesEndTime = performance.now();
@@ -278,7 +325,9 @@
     }
 
     function ajaxEdgesReturned(xmlhttp) {
+        // Deprecated - now uses ajaxVerticesAndEdgesReturned
 
+        console.log("Edges load api call ended: " + Date());
         document.getElementsByClassName('loading-text')[0].innerHTML = "Loading..<tspan>Edges loaded</tspan>";
         retrieveEdgesEndTime  = performance.now();
         var parsed = JSON.parse(xmlhttp.responseText);
