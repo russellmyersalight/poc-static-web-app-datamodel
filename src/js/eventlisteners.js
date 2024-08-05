@@ -242,9 +242,16 @@
               g = {"jV": flattenedNodes, "jE": flattenedEdges};
               fullGraphLoaded(g);
 
-              var modules = ['Pay/Calc', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "NA Tools", "State Tax", "Benefits", "Analyze", "Exchange 3", "Access"];
+              var modules = ['Pay', 'Payroll Verification', 'Core', 'People', 'euHReka', "Assist", "N/A Tools", "State Tax", "Benefits", "Analytics", "Exchange", "Portal"];
+              var moduleNames = {"Pay": "Pay/Calc", "Analytics": "Analyze", "N/A Tools": "NA Tools", "Exchange": "Exchange 3"}; // remapped module names
+
+
               modules.forEach((m) => {
-                  var nodes = nodesWithModuleName(g, m);
+                  var name = m;
+                  if (m in moduleNames) {
+                     name = moduleNames[m];
+                  }
+                  var nodes = nodesWithModuleName(g, name);
                   linkedNodeIds[m] = setLinkedNodeIds(nodes, m);
                   updateNodeLabels(); // to show exclamation mark when module loaded
                   setNodeClasses(); // highlight nodes when loaded
