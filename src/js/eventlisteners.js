@@ -47,6 +47,12 @@
 
     }
 
+    function showFredCheckboxClicked(value) {
+        showFred = value.checked;
+        showFredUpdated();
+
+    }
+
     // function searchSelectChanged(el) {
     //      var val = el.options[el.selectedIndex].value;
     //      searchVal = val;

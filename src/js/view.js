@@ -120,6 +120,17 @@
             gUse = JSON.parse(JSON.stringify(fullGraph));
             graph = {nodes: gUse.nodes, links: gUse.links};
         }
+        else if (showFred) {
+            gUse = JSON.parse(JSON.stringify(fullGraph));
+            var fredNodes = nodesWithModuleName(gUse, "Fred");
+            var fredIds = [];
+            fredNodes.forEach((n) => {
+               fredIds.push(n.id);
+            });
+            gUse = graphWithIds(gUse.jV, gUse.jE, fredIds);
+            graph = {nodes: gUse.jV, links: gUse.jE};
+            qq = 1;
+        }
         else {
             isIndividualLevel = false;
             individualLevelType = null;
@@ -138,8 +149,6 @@
                 // gUse = graphWithIds(gUse.jV, gUse.jE, both);
                 gUse = JSON.parse(JSON.stringify(fullGraph));
                 gUse = graphWithLabels(gUse.jV, gUse.jE, ['Definition']); //, 'GCC', 'HRIS ID']);
-
-
             }
             else if (levelUse ==  'All') {
                 gUse = JSON.parse(JSON.stringify(fullGraph));

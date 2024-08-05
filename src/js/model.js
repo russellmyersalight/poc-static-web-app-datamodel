@@ -54,6 +54,7 @@
 
     var showLinkLabels = false;
     var showDataCategories = false;
+    var showFred = false;
     var showModuleColours = true;
 
     //var searchVal;
@@ -196,6 +197,10 @@
 
       //levelUseChanged();
 
+   }
+
+   function showFredUpdated() {
+         initialiseGraph();
    }
 
 
