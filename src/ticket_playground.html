@@ -59,6 +59,7 @@
   <div class="container">
     <div class="text-center mb-5">
       <h1 class="display-5">AI Ticket Classification Playground</h1>
+      <small><small class="text-muted" id="app-version">Version ...</small></small>
     </div>
 
     <div class="card shadow-sm p-4 mb-4">
@@ -123,6 +124,24 @@
       </tbody>
     </table>
   </div>
+  <div class="text-center mt-3 d-none" id="diagnostics-btn-container">
+  <button type="button" class="btn btn-secondary" onclick="toggleDiagnostics()">Show Diagnostics</button>
+</div>
+
+<div class="card shadow-sm p-4 mt-4 d-none" id="diagnostics">
+  <h4 class="mb-3">Diagnostics</h4>
+  <table class="table table-sm table-bordered">
+    <tbody>
+      <tr><th>API Endpoint</th><td id="diag-api-endpoint" class="text-break"></td></tr>
+      <tr><th>Initialization</th><td id="time-init"></td></tr>
+      <tr><th>Service Tower Prediction</th><td id="time-serviceTowerPredict"></td></tr>
+      <tr><th>Intent Prediction</th><td id="time-intentPredict"></td></tr>
+      <tr><th>Summary Generation</th><td id="time-createTicketSummary"></td></tr>
+      <tr><th>Proposed Solution Generation</th><td id="time-createProposedSolution"></td></tr>
+      <tr><th>Overall</th><td id="time-overall"></td></tr>
+    </tbody>
+  </table>
+</div>
 </div>
 
   <!-- Bootstrap JS (Optional for advanced interactions) -->
@@ -130,39 +149,97 @@
 
   <!-- Your existing JS -->
   <script>
-    async function submitTicket() {
-      const loader = document.getElementById('myImage');
-      const resultBox = document.getElementById('result');
-      loader.classList.remove('d-none');
-      resultBox.classList.add('d-none');
+  let latestTimeTaken = null;
+  var API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict';  //?code=Ep7ecqT0BHZN4LnUL1U7DCAnhWVJ9XZ309IVeehN2BfhAzFuVxdJVw==';
+  API_ENDPOINT_EXTRA = "=";
+  API_ENDPOINT_EXTRA +=  "=";
+  API_ENDPOINT_EXTRA += "wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE";
+  API_ENDPOINT_EXTRA += "=edoc?";
+  API_ENDPOINT_EXTRA = API_ENDPOINT_EXTRA.split('').reverse().join('');
 
-      const shortDesc = document.getElementById('shortDesc').value;
-      const longDesc = document.getElementById('longDesc').value;
+  async function submitTicket() {
+    const loader = document.getElementById('myImage');
+    const resultBox = document.getElementById('result');
+    const diagnosticsBtn = document.getElementById('diagnostics-btn-container');
+    const diagnosticsSection = document.getElementById('diagnostics');
 
-      try {
-        const response = await fetch('https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict?code=Ep7ecqT0BHZN4LnUL1U7DCAnhWVJ9XZ309IVeehN2BfhAzFuVxdJVw==', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shortDescription: shortDesc, description: longDesc })
-        });
+    loader.classList.remove('d-none');
+    resultBox.classList.add('d-none');
+    diagnosticsBtn.classList.add('d-none');
+    diagnosticsSection.classList.add('d-none');
 
-        const data = await response.json();
+    const shortDesc = document.getElementById('shortDesc').value;
+    const longDesc = document.getElementById('longDesc').value;
 
-        document.getElementById('tower').textContent = data.result.predictedServiceTower;
-        document.getElementById('intent').textContent = data.result.predictedIntent;
-        document.getElementById('intent-description').textContent = data.result.predictedIntentDescription;
-        document.getElementById('solution').textContent = data.result.proposedSolution;
-        document.getElementById('summary').textContent = data.result.summary;
+    try {
+      const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shortDescription: shortDesc, description: longDesc })
+      });
 
-        loader.classList.add('d-none');
-        resultBox.classList.remove('d-none');
+      const data = await response.json();
 
-      } catch (error) {
-        console.error('Error fetching prediction:', error);
-        loader.classList.add('d-none');
-        alert("An error occurred. Please try again.");
-      }
+      document.getElementById('tower').textContent = data.result.predictedServiceTower;
+      document.getElementById('intent').textContent = data.result.predictedIntent;
+      document.getElementById('intent-description').textContent = data.result.predictedIntentDescription;
+      document.getElementById('solution').textContent = data.result.proposedSolution;
+      document.getElementById('summary').textContent = data.result.summary;
+
+      // Store timeTaken globally for diagnostics
+      latestTimeTaken = data.timeTaken;
+
+      loader.classList.add('d-none');
+      resultBox.classList.remove('d-none');
+      diagnosticsBtn.classList.remove('d-none');
+
+    } catch (error) {
+      console.error('Error fetching prediction:', error);
+      loader.classList.add('d-none');
+      alert("An error occurred. Please try again.");
     }
+  }
+
+function toggleDiagnostics() {
+    if (!latestTimeTaken) return;
+
+    document.getElementById('diag-api-endpoint').textContent = API_ENDPOINT; //.substring(0, API_ENDPOINT.indexOf("?"));
+    document.getElementById('time-init').textContent = `${latestTimeTaken.init} sec`;
+    document.getElementById('time-serviceTowerPredict').textContent = `${latestTimeTaken.serviceTowerPredict} sec`;
+    document.getElementById('time-intentPredict').textContent = `${latestTimeTaken.intentPredict} sec`;
+    document.getElementById('time-createTicketSummary').textContent = `${latestTimeTaken.createTicketSummary} sec`;
+    document.getElementById('time-createProposedSolution').textContent = `${latestTimeTaken.createProposedSolution} sec`;
+    document.getElementById('time-overall').textContent = `${latestTimeTaken.overall} sec`;
+
+    document.getElementById('diagnostics').classList.toggle('d-none');
+  }
+
+  document.getElementById('longDesc').addEventListener('keydown', function(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();  // Prevent newline insertion
+    submitTicket();
+  }
+});
+
+   fetch('config.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to load config.json');
+      }
+      return response.json();
+    })
+    .then(config => {
+      const versionEl = document.getElementById('app-version');
+      if (versionEl) {
+        versionEl.textContent = `Version ${config.version}`;
+      }
+    })
+    .catch(error => {
+      console.error('Error loading config:', error);
+    });
+
+
+
   </script>
 </body>
 
