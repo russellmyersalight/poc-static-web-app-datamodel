@@ -131,8 +131,19 @@
 let latestTimeTaken = null;
 let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
 let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
-// const API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
-// let API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+
+ const queryString = window.location.search;
+ const urlParams = new URLSearchParams(queryString);
+
+ let CONCURRENCY_LIMIT = 3;
+ const concurrencyLimitParam = urlParams.get('concurrency');
+ if (concurrencyLimitParam == null) {
+
+ }
+ else {
+   CONCURRENCY_LIMIT = parseInt(concurrencyLimitParam);
+ }
+
 
 
 async function submitTicket() {
@@ -179,7 +190,7 @@ async function submitTicket() {
 
 /* ===== CSV UPLOAD & PARALLEL BULK PREDICTION WITH PROGRESS BAR ===== */
 let bulkResults = [];
-const CONCURRENCY_LIMIT = 1;
+
 envChar = "t";
 
 /* ===== ROBUST CSV PARSER THAT HANDLES QUOTES, COMMAS & LINE BREAKS ===== */
@@ -283,7 +294,7 @@ async function processCSV() {
 
   // Progress UI
   statusDiv.innerHTML = `
-    <div class="mb-2 text-info">Processing ${total} tickets <span id="initialisationMsg">... Initialising</span><span hidden>(concurrency: ${CONCURRENCY_LIMIT})...</span></div>
+    <div class="mb-2 text-info">Processing ${total} tickets <span id="initialisationMsg">... Initialising</span><span>&nbsp;&nbsp;&nbsp;<small><small><small>(concurrency: ${CONCURRENCY_LIMIT})</small></small></small></span></div>
     <div class="progress" style="height: 25px;">
       <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
            role="progressbar" style="width: 0%">0%</div>
