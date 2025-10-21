@@ -1,225 +1,494 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Ticket Prediction Playground</title>
 
-  <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/ticket_playground_style.css">
-
   <style>
     body {
       font-family: Arial, sans-serif;
       margin-top: 2em;
       background-color: #f8f9fa;
     }
-
     .thinking-icon {
       font-size: 2rem;
       animation: pulse 1s infinite ease-in-out;
       margin-top: 10px;
       text-align: center;
     }
-
     @keyframes pulse {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-
-      50% {
-        transform: scale(1.2);
-        opacity: 0.8;
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
     }
-
-    #loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    img.pulsate {
-      width: 100px;
-      animation: pulse 2s infinite;
-    }
+    img.pulsate { width: 100px; animation: pulse 2s infinite; }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <div class="text-center mb-5">
-      <h1 class="display-5">AI Ticket Classification Playground</h1>
-      <small><small class="text-muted" id="app-version">Version ...</small></small>
-    </div>
+<div class="container">
 
-    <div class="card shadow-sm p-4 mb-4">
-      <form id="ticketForm">
-        <div class="mb-3">
-          <label for="shortDesc" class="form-label">Short Description</label>
-          <input type="text" class="form-control" id="shortDesc" placeholder="Enter short description" required>
-        </div>
-
-        <div class="mb-3">
-          <label for="longDesc" class="form-label">Long Description</label>
-          <textarea class="form-control" id="longDesc" rows="5" placeholder="Enter long description" required></textarea>
-        </div>
-
-        <div class="text-center">
-          <img id="myImage" class="pulsate d-none" src="img/Designer.png" alt="Pulsating Image">
-          <div id="loader" class="thinking-icon d-none">🤔</div>
-        </div>
-
-        <div class="text-center mt-3">
-          <button type="button" class="btn btn-primary btn-lg" onclick="submitTicket()">Submit</button>
-        </div>
-      </form>
-    </div>
-
-<!--    <div class="card shadow-sm p-4 mt-4 d-none" id="result">-->
-<!--      <h2 class="mb-4">Predictions</h2>-->
-<!--      <p><strong>Service Tower:</strong> <span id="tower"></span></p>-->
-<!--      <p><strong>Intent:</strong> <span class="text-primary" id="intent"></span></p>-->
-<!--      <p><strong>Intent Description:</strong> <span class="text-primary" id="intent-description"></span></p>-->
-<!--      <p><strong>Proposed Solution:</strong> <span id="solution"></span></p>-->
-<!--      <p><strong>Summary:</strong> <span id="summary"></span></p>-->
-<!--    </div>-->
-<!--  </div>-->
-
-  <div class="card shadow-sm p-4 mt-4 d-none" id="result">
-  <h2 class="mb-4">Predictions</h2>
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped">
-      <tbody>
-        <tr>
-          <th scope="row">Service Tower</th>
-          <td  class="text-primary" id="tower"></td>
-        </tr>
-        <tr>
-          <th scope="row">Intent</th>
-          <td class="text-primary" id="intent"></td>
-        </tr>
-        <tr>
-          <th scope="row">Intent Description</th>
-          <td class="text-primary" id="intent-description"></td>
-        </tr>
-
-        <tr>
-          <th scope="row">Summary</th>
-          <td id="summary"></td>
-        </tr>
-        <tr>
-          <th scope="row">Proposed Solution</th>
-          <td id="solution"></td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="text-center mb-5">
+    <h1 class="display-5">AI Ticket Classification Playground</h1>
+    <small><small class="text-muted" id="app-version" onclick="toggleEnv()">Version ...</small></small>
+    &nbsp;&nbsp;<small><small><small><small><small id="envText">t</small></small></small></small></small>
   </div>
-  <div class="text-center mt-3 d-none" id="diagnostics-btn-container">
-  <button type="button" class="btn btn-secondary" onclick="toggleDiagnostics()">Show Diagnostics</button>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="predictionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Ticket</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk" type="button" role="tab">Bulk CSV</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="predictionTabsContent">
+
+    <!-- Single Ticket Tab -->
+    <div class="tab-pane fade show active" id="single" role="tabpanel">
+      <div class="card shadow-sm p-4 mb-4">
+        <h4>Single Ticket Classification</h4>
+        <form id="ticketForm">
+          <div class="mb-3">
+            <label for="shortDesc" class="form-label">Short Description</label>
+            <input type="text" class="form-control" id="shortDesc" placeholder="Enter short description" required>
+          </div>
+           <div class="mb-3">
+            <label for="longDesc" class="form-label">Long Description</label>
+            <textarea class="form-control" id="longDesc" rows="5" placeholder="Enter long description" required
+                      onkeydown="handleEnterSubmit(event)"></textarea>
+          </div>
+          <div class="text-center">
+            <img id="myImage" class="pulsate d-none" src="img/Designer.png" alt="Pulsating Image">
+          </div>
+          <div class="text-center mt-3">
+            <button type="button" class="btn btn-primary btn-lg" onclick="submitTicket()">Submit</button>
+          </div>
+        </form>
+
+        <div class="card shadow-sm p-4 mt-4 d-none" id="result">
+          <h2 class="mb-4">Predictions</h2>
+            <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <tbody>
+                <tr><th>Service Tower</th><td class="text-primary" id="tower"></td></tr>
+                <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
+                <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
+                <tr><th>Summary</th><td id="summary"></td></tr>
+                <tr><th>Proposed Solution</th><td id="solution"></td></tr>
+              </tbody>
+            </table>
+              <div class="text-center mt-3">
+                <button id="showDiagnosticsBtn" class="btn btn-info d-none" onclick="toggleDiagnostics()">Show Diagnostics</button>
+              </div>
+
+              <div class="card mt-3 d-none" id="diagnosticsCard">
+                <h4 class="mb-3">API Timing Diagnostics</h4>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-striped" id="diagnosticsTable">
+                    <thead>
+                      <tr><th>Step</th><th>Time Taken (s)</th></tr>
+                    </thead>
+                    <tbody>
+                      <!-- Dynamically populated -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk CSV Tab -->
+    <div class="tab-pane fade" id="bulk" role="tabpanel">
+      <div class="card shadow-sm p-4 mb-4">
+        <h4>Bulk Ticket Classification (via CSV)</h4>
+        <p class="text-muted">Upload a CSV file with header including at least these columns: <strong>"ticket_id", "short_description"</strong> and <strong>"long_description"</strong></p>
+        <div class="mb-3">
+          <input type="file" class="form-control" id="csvFileInput" accept=".csv">
+        </div>
+        <div class="text-center">
+          <button class="btn btn-success" onclick="processCSV()">Upload & Predict</button>
+        </div>
+        <div class="mt-3" id="bulkStatus"></div>
+        <div class="text-center mt-3">
+          <button id="downloadCsvBtn" class="btn btn-secondary d-none" onclick="downloadCSV()">Download Results</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div class="card shadow-sm p-4 mt-4 d-none" id="diagnostics">
-  <h4 class="mb-3">Diagnostics</h4>
-  <table class="table table-sm table-bordered">
-    <tbody>
-      <tr><th>API Endpoint</th><td id="diag-api-endpoint" class="text-break"></td></tr>
-      <tr><th>Initialization</th><td id="time-init"></td></tr>
-      <tr><th>Service Tower Prediction</th><td id="time-serviceTowerPredict"></td></tr>
-      <tr><th>Intent Prediction</th><td id="time-intentPredict"></td></tr>
-      <tr><th>Summary Generation</th><td id="time-createTicketSummary"></td></tr>
-      <tr><th>Proposed Solution Generation</th><td id="time-createProposedSolution"></td></tr>
-      <tr><th>Overall</th><td id="time-overall"></td></tr>
-    </tbody>
-  </table>
-</div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Bootstrap JS (Optional for advanced interactions) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let latestTimeTaken = null;
+let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+// const API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
+// let API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
 
-  <!-- Your existing JS -->
-  <script>
-  let latestTimeTaken = null;
-  var API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict';  //?code=Ep7ecqT0BHZN4LnUL1U7DCAnhWVJ9XZ309IVeehN2BfhAzFuVxdJVw==';
-  API_ENDPOINT_EXTRA = "=";
-  API_ENDPOINT_EXTRA +=  "=";
-  API_ENDPOINT_EXTRA += "wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE";
-  API_ENDPOINT_EXTRA += "=edoc?";
-  API_ENDPOINT_EXTRA = API_ENDPOINT_EXTRA.split('').reverse().join('');
 
-  async function submitTicket() {
-    const loader = document.getElementById('myImage');
-    const resultBox = document.getElementById('result');
-    const diagnosticsBtn = document.getElementById('diagnostics-btn-container');
-    const diagnosticsSection = document.getElementById('diagnostics');
+async function submitTicket() {
+  const loader = document.getElementById('myImage');
+  const resultBox = document.getElementById('result');
+  loader.classList.remove('d-none');
+  resultBox.classList.add('d-none');
 
-    loader.classList.remove('d-none');
-    resultBox.classList.add('d-none');
-    diagnosticsBtn.classList.add('d-none');
-    diagnosticsSection.classList.add('d-none');
+  const shortDesc = document.getElementById('shortDesc').value;
+  const longDesc = document.getElementById('longDesc').value;
 
-    const shortDesc = document.getElementById('shortDesc').value;
-    const longDesc = document.getElementById('longDesc').value;
+  try {
+    const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc })
+    });
+    const data = await response.json();
+
+    // Store timeTaken globally for diagnostics
+    latestTimeTaken = data.timeTaken;
+
+    document.getElementById('tower').textContent = data.result.predictedServiceTower;
+    document.getElementById('intent').textContent = data.result.predictedIntent;
+    document.getElementById('intent-description').textContent = data.result.predictedIntentDescription;
+    document.getElementById('solution').textContent = data.result.proposedSolution;
+    document.getElementById('summary').textContent = data.result.summary;
+
+    loader.classList.add('d-none');
+    resultBox.classList.remove('d-none');
+
+    // Show toggle button and hide diagnostics table initially
+    const diagBtn = document.getElementById('showDiagnosticsBtn');
+    diagBtn.classList.remove('d-none');
+    diagBtn.textContent = 'Show Diagnostics';
+    document.getElementById('diagnosticsCard').classList.add('d-none');
+
+  } catch (error) {
+    console.error('Error fetching prediction:', error);
+    loader.classList.add('d-none');
+    alert("An error occurred. Please try again.");
+  }
+}
+
+/* ===== CSV UPLOAD & PARALLEL BULK PREDICTION WITH PROGRESS BAR ===== */
+let bulkResults = [];
+const CONCURRENCY_LIMIT = 1;
+envChar = "t";
+
+/* ===== ROBUST CSV PARSER THAT HANDLES QUOTES, COMMAS & LINE BREAKS ===== */
+function parseCSV(text) {
+  const rows = [];
+  let current = [];
+  let i = 0;
+  let value = '';
+  let inQuotes = false;
+
+  while (i < text.length) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') { // escaped quote
+          value += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        value += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        current.push(value);
+        value = '';
+      } else if (char === '\r') {
+        if (text[i + 1] === '\n') i++; // skip \n after \r
+        current.push(value);
+        rows.push(current);
+        current = [];
+        value = '';
+      } else if (char === '\n') {
+        current.push(value);
+        rows.push(current);
+        current = [];
+        value = '';
+      } else {
+        value += char;
+      }
+    }
+    i++;
+  }
+
+  // Add last value
+  current.push(value);
+  rows.push(current);
+
+  return rows;
+}
+
+async function processCSV() {
+  const fileInput = document.getElementById('csvFileInput');
+  const statusDiv = document.getElementById('bulkStatus');
+  const downloadBtn = document.getElementById('downloadCsvBtn');
+  bulkResults = [];
+  downloadBtn.classList.add('d-none');
+  statusDiv.innerHTML = '';
+
+  if (!fileInput.files.length) {
+    alert('Please select a CSV file first.');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const text = await file.text();
+  const rows = parseCSV(text);
+
+  if (rows.length < 2) {
+    alert("CSV is empty or invalid.");
+    return;
+  }
+
+  const headers = rows[0].map(h => h.trim());
+  const lowerHeaders = headers.map(h => h.toLowerCase());
+  const idIndex = lowerHeaders.indexOf('ticket_id');
+  const shortIndex = lowerHeaders.indexOf('short_description');
+  const longIndex = lowerHeaders.indexOf('long_description');
+
+  if (idIndex === -1 || shortIndex === -1 || longIndex === -1) {
+    alert("CSV must include headers: ticket_id, short_description, long_description");
+    return;
+  }
+
+  // Parse tickets keeping all original fields
+  const tickets = rows.slice(1).map(cols => {
+    const ticket = {};
+    headers.forEach((h, idx) => {
+      ticket[h] = cols[idx]?.trim() || '';
+    });
+    return ticket;
+  }).filter(t => t['short_description'] && t['long_description']);
+
+  const total = tickets.length;
+  let completed = 0;
+  const startTime = Date.now();
+
+  // Progress UI
+  statusDiv.innerHTML = `
+    <div class="mb-2 text-info">Processing ${total} tickets <span id="initialisationMsg">... Initialising</span><span hidden>(concurrency: ${CONCURRENCY_LIMIT})...</span></div>
+    <div class="progress" style="height: 25px;">
+      <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+           role="progressbar" style="width: 0%">0%</div>
+    </div>
+    <div class="mt-2 small text-muted" id="progressText"></div>
+  `;
+
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  const progressInitText = document.getElementById("initialisationMsg");
+
+  const updateProgress = () => {
+    progressInitText.hidden = true;
+    const percent = Math.round((completed / total) * 100);
+    const elapsed = (Date.now() - startTime) / 1000;
+    const avgPerTicket = elapsed / (completed || 1);
+    const remaining = total - completed;
+    const eta = avgPerTicket * remaining;
+    const etaFormatted = eta < 5 ? `${eta.toFixed(1)}s` :
+                         eta < 60 ? `${Math.round(eta)}s` :
+                         `${Math.round(eta / 60)}m ${Math.round(eta % 60)}s`;
+    progressBar.style.width = percent + '%';
+    progressBar.textContent = percent + '%';
+    progressText.innerHTML = `Processed ${completed}/${total} (${percent}%) — ETA: ${etaFormatted}`;
+  };
+
+  async function processBatch(startIndex) {
+    const ticket = tickets[startIndex];
+    if (!ticket) return;
 
     try {
+      const payload = {
+        shortDescription: ticket['short_description'],
+        description: ticket['long_description']
+      };
+
       const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shortDescription: shortDesc, description: longDesc })
+        body: JSON.stringify(payload)
       });
-
       const data = await response.json();
 
-      document.getElementById('tower').textContent = data.result.predictedServiceTower;
-      document.getElementById('intent').textContent = data.result.predictedIntent;
-      document.getElementById('intent-description').textContent = data.result.predictedIntentDescription;
-      document.getElementById('solution').textContent = data.result.proposedSolution;
-      document.getElementById('summary').textContent = data.result.summary;
+      bulkResults[startIndex] = {
+        ...ticket, // preserve all original fields
+        GENAI_service_tower: data.result.predictedServiceTower || '',
+        GENAI_intent: data.result.predictedIntent || '',
+        GENAI_intent_description: data.result.predictedIntentDescription || '',
+        GENAI_proposed_solution: data.result.proposedSolution || '',
+        GENAI_summary: data.result.summary || ''
+      };
+    } catch (err) {
+      console.error(`Error on ticket ${ticket['ticket_id']}:`, err);
+      bulkResults[startIndex] = {
+        ...ticket,
+        service_tower: 'Error',
+        intent: 'Error',
+        intent_description: '',
+        proposed_solution: '',
+        summary: ''
+      };
+    } finally {
+      completed++;
+      updateProgress();
+    }
 
-      // Store timeTaken globally for diagnostics
-      latestTimeTaken = data.timeTaken;
-
-      loader.classList.add('d-none');
-      resultBox.classList.remove('d-none');
-      diagnosticsBtn.classList.remove('d-none');
-
-    } catch (error) {
-      console.error('Error fetching prediction:', error);
-      loader.classList.add('d-none');
-      alert("An error occurred. Please try again.");
+    const nextIndex = startIndex + CONCURRENCY_LIMIT;
+    if (nextIndex < tickets.length) {
+      await processBatch(nextIndex);
     }
   }
 
+  const workers = [];
+  for (let i = 0; i < CONCURRENCY_LIMIT && i < tickets.length; i++) {
+    workers.push(processBatch(i));
+  }
+
+  await Promise.all(workers);
+
+  progressBar.classList.remove('progress-bar-animated');
+  progressBar.classList.add('bg-success');
+  progressBar.textContent = '100%';
+  progressText.innerHTML = `✅ Completed processing all ${bulkResults.length} tickets.`;
+  downloadBtn.classList.remove('d-none');
+}
+
+function downloadCSV() {
+  if (bulkResults.length === 0) return;
+
+  // Preserve original headers + new prediction columns
+  const originalHeaders = Object.keys(bulkResults[0]).filter(h =>
+    !['GENAI_service_tower','GENAI_intent','GENAI_intent_description','GENAI_proposed_solution','GENAI_summary'].includes(h)
+  );
+  const newHeaders = ['GENAI_service_tower','GENAI_intent','GENAI_intent_description','GENAI_proposed_solution','GENAI_summary'];
+  const headers = [...originalHeaders, ...newHeaders];
+
+  const csvContent =
+    headers.join(',') + '\n' +
+    bulkResults.map(row =>
+      headers.map(h => `"${(row[h] || '').replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ticket_predictions.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleEnterSubmit(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault(); // prevent newline
+    submitTicket();         // call your existing submit function
+  }
+}
+
+function showDiagnostics() {
+  if (!latestTimeTaken) return;
+
+  const tbody = document.getElementById('diagnosticsTable').querySelector('tbody');
+  tbody.innerHTML = ''; // clear previous rows
+
+  for (const [step, time] of Object.entries(latestTimeTaken)) {
+    const tr = document.createElement('tr');
+    const tdStep = document.createElement('td');
+    tdStep.textContent = step;
+    const tdTime = document.createElement('td');
+    tdTime.textContent = time;
+    tr.appendChild(tdStep);
+    tr.appendChild(tdTime);
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('diagnosticsCard').classList.remove('d-none');
+}
+
 function toggleDiagnostics() {
-    if (!latestTimeTaken) return;
+  const diagCard = document.getElementById('diagnosticsCard');
+  const diagBtn = document.getElementById('showDiagnosticsBtn');
 
-    document.getElementById('diag-api-endpoint').textContent = API_ENDPOINT; //.substring(0, API_ENDPOINT.indexOf("?"));
-    document.getElementById('time-init').textContent = `${latestTimeTaken.init} sec`;
-    document.getElementById('time-serviceTowerPredict').textContent = `${latestTimeTaken.serviceTowerPredict} sec`;
-    document.getElementById('time-intentPredict').textContent = `${latestTimeTaken.intentPredict} sec`;
-    document.getElementById('time-createTicketSummary').textContent = `${latestTimeTaken.createTicketSummary} sec`;
-    document.getElementById('time-createProposedSolution').textContent = `${latestTimeTaken.createProposedSolution} sec`;
-    document.getElementById('time-overall').textContent = `${latestTimeTaken.overall} sec`;
+  if (diagCard.classList.contains('d-none')) {
+    // Show diagnostics
+    if (latestTimeTaken) {
+      const tbody = diagCard.querySelector('tbody');
+      tbody.innerHTML = ''; // clear previous rows
 
-    document.getElementById('diagnostics').classList.toggle('d-none');
+
+
+      for (const [step, time] of Object.entries(latestTimeTaken)) {
+        const tr = document.createElement('tr');
+        const tdStep = document.createElement('td');
+        tdStep.textContent = step;
+        const tdTime = document.createElement('td');
+        tdTime.textContent = time;
+        tr.appendChild(tdStep);
+        tr.appendChild(tdTime);
+        tbody.appendChild(tr);
+      }
+      const tr = document.createElement('tr');
+      const tdEndpointTitle = document.createElement('td');
+      tdEndpointTitle.textContent = "Endpoint";
+      const tdEndpoint = document.createElement('td');
+      tdEndpoint.textContent = API_ENDPOINT;
+      tr.appendChild(tdEndpointTitle);
+      tr.appendChild(tdEndpoint);
+      tbody.appendChild(tr);
+
+
+    }
+    diagCard.classList.remove('d-none');
+    diagBtn.textContent = 'Hide Diagnostics';
+  } else {
+    // Hide diagnostics
+    diagCard.classList.add('d-none');
+    diagBtn.textContent = 'Show Diagnostics';
+  }
+}
+
+function toggleEnv() {
+  console.log("ahaaaa");
+  if (envChar === "t") {
+      envChar = "q";
+  }
+  else {
+    envChar = "t";
+  }
+  document.getElementById("envText").innerHTML = envChar;
+
+  switch(envChar) {
+    case "t":
+      API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+      API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+      break;
+    case "q":
+      API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
+      API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+
   }
 
-  document.getElementById('longDesc').addEventListener('keydown', function(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();  // Prevent newline insertion
-    submitTicket();
-  }
-});
+}
+
+
+
 
    fetch('config.json')
     .then(response => {
@@ -238,9 +507,6 @@ function toggleDiagnostics() {
       console.error('Error loading config:', error);
     });
 
-
-
-  </script>
+</script>
 </body>
-
 </html>
