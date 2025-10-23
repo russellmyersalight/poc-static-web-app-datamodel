@@ -31,7 +31,7 @@
 
   <div class="text-center mb-5">
     <h1 class="display-5">AI Ticket Classification Playground</h1>
-    <small><small class="text-muted" id="app-version" onclick="toggleEnv()">Version ...</small></small>
+    <small><small class="text-muted" id="app-version">Version ...</small></small>
     &nbsp;&nbsp;<small><small><small><small><small id="envText">t</small></small></small></small></small>
   </div>
 
@@ -86,12 +86,17 @@
               </div>
 
               <div class="card mt-3 d-none" id="diagnosticsCard">
-                <h4 class="mb-3">API Timing Diagnostics</h4>
+                <h4 class="mb-3">API Diagnostics</h4>
                 <div class="table-responsive">
                   <table class="table table-bordered table-striped" id="diagnosticsTable">
-                    <thead>
-                      <tr><th>Step</th><th>Time Taken (s)</th></tr>
-                    </thead>
+                   <thead>
+                      <tr>
+                        <th>Step</th>
+                        <th>Time Taken (s)</th>
+                        <th>Prompt Tokens</th>
+                        <th>Completion Tokens</th>
+                      </tr>
+                   </thead>
                     <tbody>
                       <!-- Dynamically populated -->
                     </tbody>
@@ -129,7 +134,11 @@
 
 <script>
 let latestTimeTaken = null;
-let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+
+// let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+// let API_ENDPOINT = "http://localhost:7075/api/predict"; // C# local
+let API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+
 let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
 
  const queryString = window.location.search;
@@ -137,12 +146,27 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
 
  let CONCURRENCY_LIMIT = 3;
  const concurrencyLimitParam = urlParams.get('concurrency');
+
  if (concurrencyLimitParam == null) {
 
  }
  else {
    CONCURRENCY_LIMIT = parseInt(concurrencyLimitParam);
  }
+
+ let TARGET_ENV = 't';
+
+const targetEnvParam = urlParams.get('target');
+
+ if (targetEnvParam == null) {
+
+ }
+ else {
+   TARGET_ENV = targetEnvParam;
+ }
+
+ targetEnvChanged();
+
 
 
 
@@ -165,6 +189,7 @@ async function submitTicket() {
 
     // Store timeTaken globally for diagnostics
     latestTimeTaken = data.timeTaken;
+    window.lastTokensUsed = data.tokensUsed;
 
     document.getElementById('tower').textContent = data.result.predictedServiceTower;
     document.getElementById('intent').textContent = data.result.predictedIntent;
@@ -438,54 +463,88 @@ function toggleDiagnostics() {
   const diagBtn = document.getElementById('showDiagnosticsBtn');
 
   if (diagCard.classList.contains('d-none')) {
-    // Show diagnostics
     if (latestTimeTaken) {
       const tbody = diagCard.querySelector('tbody');
-      tbody.innerHTML = ''; // clear previous rows
+      tbody.innerHTML = '';
 
+      const tokenData = window.lastTokensUsed || {};
 
+      // Mapping between step names and tokens object keys
+      const tokenMap = {
+        serviceTowerPredict: tokenData.service_tower || {},
+        intentPredict: tokenData.intent || {},
+        createTicketSummary: tokenData.ticket_summary || {},
+        createProposedSolution: tokenData.proposed_solution || {}
+      };
+
+      let totalPrompt = 0;
+      let totalCompletion = 0;
 
       for (const [step, time] of Object.entries(latestTimeTaken)) {
         const tr = document.createElement('tr');
         const tdStep = document.createElement('td');
         tdStep.textContent = step;
+
         const tdTime = document.createElement('td');
         tdTime.textContent = time;
+
+        let prompt = '-';
+        let completion = '-';
+
+        if (step !== 'overall') {
+          const tData = tokenMap[step] || {};
+          prompt = tData.prompt ?? '-';
+          completion = tData.completion ?? '-';
+          if (!isNaN(parseInt(tData.prompt))) totalPrompt += parseInt(tData.prompt);
+          if (!isNaN(parseInt(tData.completion))) totalCompletion += parseInt(tData.completion);
+        }
+
+        const tdPrompt = document.createElement('td');
+        const tdCompletion = document.createElement('td');
+
+        // For the "overall" row, display the total tokens
+        if (step === 'overall') {
+          tdPrompt.textContent = totalPrompt || '-';
+          tdCompletion.textContent = totalCompletion || '-';
+          tr.classList.add('table-secondary', 'fw-bold');
+        } else {
+          tdPrompt.textContent = prompt;
+          tdCompletion.textContent = completion;
+        }
+
         tr.appendChild(tdStep);
         tr.appendChild(tdTime);
+        tr.appendChild(tdPrompt);
+        tr.appendChild(tdCompletion);
         tbody.appendChild(tr);
       }
-      const tr = document.createElement('tr');
-      const tdEndpointTitle = document.createElement('td');
-      tdEndpointTitle.textContent = "Endpoint";
-      const tdEndpoint = document.createElement('td');
-      tdEndpoint.textContent = API_ENDPOINT;
-      tr.appendChild(tdEndpointTitle);
-      tr.appendChild(tdEndpoint);
-      tbody.appendChild(tr);
 
-
+      // Add endpoint row at the bottom
+      const endpointRow = document.createElement('tr');
+      endpointRow.innerHTML = `
+        <td>Endpoint</td>
+        <td colspan="3">${API_ENDPOINT}</td>
+      `;
+      tbody.appendChild(endpointRow);
     }
+
     diagCard.classList.remove('d-none');
     diagBtn.textContent = 'Hide Diagnostics';
   } else {
-    // Hide diagnostics
     diagCard.classList.add('d-none');
     diagBtn.textContent = 'Show Diagnostics';
   }
 }
 
-function toggleEnv() {
-  console.log("ahaaaa");
-  if (envChar === "t") {
-      envChar = "q";
-  }
-  else {
-    envChar = "t";
-  }
-  document.getElementById("envText").innerHTML = envChar;
+function displayEnv() {
 
-  switch(envChar) {
+  document.getElementById("envText").innerHTML = TARGET_ENV;
+
+
+}
+
+function targetEnvChanged() {
+  switch (TARGET_ENV) {
     case "t":
       API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
       API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
@@ -493,8 +552,15 @@ function toggleEnv() {
     case "q":
       API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
       API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
-
+      break;
+    case "l":
+      API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+      break;
   }
+
+  displayEnv();
+
+
 
 }
 
