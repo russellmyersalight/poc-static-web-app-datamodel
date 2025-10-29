@@ -25,6 +25,7 @@
     }
     img.pulsate { width: 100px; animation: pulse 2s infinite; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -109,25 +110,26 @@
       </div>
     </div>
 
-    <!-- Bulk CSV Tab -->
-    <div class="tab-pane fade" id="bulk" role="tabpanel">
-      <div class="card shadow-sm p-4 mb-4">
-        <h4>Bulk Ticket Classification (via CSV)</h4>
-        <p class="text-muted">Upload a CSV file with header including at least these columns: <strong>"ticket_id", "short_description"</strong> and <strong>"long_description"</strong></p>
-        <div class="mb-3">
-          <input type="file" class="form-control" id="csvFileInput" accept=".csv">
-        </div>
-        <div class="text-center">
-          <button class="btn btn-success" onclick="processCSV()">Upload & Predict</button>
-        </div>
-        <div class="mt-3" id="bulkStatus"></div>
-        <div class="text-center mt-3">
-          <button id="downloadCsvBtn" class="btn btn-secondary d-none" onclick="downloadCSV()">Download Results</button>
+    <!-- Bulk Excel Tab -->
+      <div class="tab-pane fade" id="bulk" role="tabpanel">
+        <div class="card shadow-sm p-4 mb-4">
+          <h4>Bulk Ticket Classification (via Excel)</h4>
+          <p class="text-muted">
+            Upload an Excel file (.xlsx) with a header including at least these columns:
+            <strong>"TICKETID"</strong>, <strong>"SHORT_DESCRIPTION"</strong>, and <strong>"DESCRIPTION"</strong>
+          </p>
+          <div class="mb-3">
+            <input type="file" class="form-control" id="excelFileInput" accept=".xlsx,.xls">
+          </div>
+          <div class="text-center">
+            <button class="btn btn-success" onclick="processExcel()">Upload & Predict</button>
+          </div>
+          <div class="mt-3" id="bulkStatus"></div>
+          <div class="text-center mt-3">
+            <button id="downloadExcelBtn" class="btn btn-secondary d-none" onclick="downloadExcel()">Download Results</button>
+          </div>
         </div>
       </div>
-    </div>
-
-  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -144,7 +146,7 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
  const queryString = window.location.search;
  const urlParams = new URLSearchParams(queryString);
 
- let CONCURRENCY_LIMIT = 3;
+ let CONCURRENCY_LIMIT = 1;
  const concurrencyLimitParam = urlParams.get('concurrency');
 
  if (concurrencyLimitParam == null) {
@@ -219,107 +221,51 @@ let bulkResults = [];
 envChar = "t";
 
 /* ===== ROBUST CSV PARSER THAT HANDLES QUOTES, COMMAS & LINE BREAKS ===== */
-function parseCSV(text) {
-  const rows = [];
-  let current = [];
-  let i = 0;
-  let value = '';
-  let inQuotes = false;
-
-  while (i < text.length) {
-    const char = text[i];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (text[i + 1] === '"') { // escaped quote
-          value += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        value += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ',') {
-        current.push(value);
-        value = '';
-      } else if (char === '\r') {
-        if (text[i + 1] === '\n') i++; // skip \n after \r
-        current.push(value);
-        rows.push(current);
-        current = [];
-        value = '';
-      } else if (char === '\n') {
-        current.push(value);
-        rows.push(current);
-        current = [];
-        value = '';
-      } else {
-        value += char;
-      }
-    }
-    i++;
-  }
-
-  // Add last value
-  current.push(value);
-  rows.push(current);
-
-  return rows;
-}
-
-async function processCSV() {
-  const fileInput = document.getElementById('csvFileInput');
+async function processExcel() {
+  const fileInput = document.getElementById('excelFileInput');
   const statusDiv = document.getElementById('bulkStatus');
-  const downloadBtn = document.getElementById('downloadCsvBtn');
+  const downloadBtn = document.getElementById('downloadExcelBtn');
   bulkResults = [];
   downloadBtn.classList.add('d-none');
   statusDiv.innerHTML = '';
 
   if (!fileInput.files.length) {
-    alert('Please select a CSV file first.');
+    alert('Please select an Excel file first.');
     return;
   }
 
   const file = fileInput.files[0];
-  const text = await file.text();
-  const rows = parseCSV(text);
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data, { type: 'array' });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-  if (rows.length < 2) {
-    alert("CSV is empty or invalid.");
+  if (jsonData.length === 0) {
+    alert("Excel sheet is empty or invalid.");
     return;
   }
 
-  const headers = rows[0].map(h => h.trim());
+  const headers = Object.keys(jsonData[0]);
   const lowerHeaders = headers.map(h => h.toLowerCase());
-  const idIndex = lowerHeaders.indexOf('ticket_id');
+  const idIndex = lowerHeaders.indexOf('ticketid');
   const shortIndex = lowerHeaders.indexOf('short_description');
-  const longIndex = lowerHeaders.indexOf('long_description');
+  const longIndex = lowerHeaders.indexOf('description');
 
   if (idIndex === -1 || shortIndex === -1 || longIndex === -1) {
-    alert("CSV must include headers: ticket_id, short_description, long_description");
+    alert("Excel must include at least these headers: TICKETID, SHORT_DESCRIPTION, DESCRIPTION");
     return;
   }
 
-  // Parse tickets keeping all original fields
-  const tickets = rows.slice(1).map(cols => {
-    const ticket = {};
-    headers.forEach((h, idx) => {
-      ticket[h] = cols[idx]?.trim() || '';
-    });
-    return ticket;
-  }).filter(t => t['short_description'] && t['long_description']);
-
+  const tickets = jsonData.filter(t => t['SHORT_DESCRIPTION'] && t['DESCRIPTION']);
   const total = tickets.length;
   let completed = 0;
   const startTime = Date.now();
 
-  // Progress UI
   statusDiv.innerHTML = `
-    <div class="mb-2 text-info">Processing ${total} tickets <span id="initialisationMsg">... Initialising</span><span>&nbsp;&nbsp;&nbsp;<small><small><small>(concurrency: ${CONCURRENCY_LIMIT})</small></small></small></span></div>
+    <div class="mb-2 text-info">Processing ${total} tickets
+      <span id="initialisationMsg">... Initialising</span>
+      <span>&nbsp;&nbsp;&nbsp;<small><small>(concurrency: ${CONCURRENCY_LIMIT})</small></small></span>
+    </div>
     <div class="progress" style="height: 25px;">
       <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
            role="progressbar" style="width: 0%">0%</div>
@@ -352,8 +298,8 @@ async function processCSV() {
 
     try {
       const payload = {
-        shortDescription: ticket['short_description'],
-        description: ticket['long_description']
+        shortDescription: ticket['SHORT_DESCRIPTION'],
+        description: ticket['DESCRIPTION']
       };
 
       const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
@@ -364,7 +310,7 @@ async function processCSV() {
       const data = await response.json();
 
       bulkResults[startIndex] = {
-        ...ticket, // preserve all original fields
+        ...ticket,
         GENAI_service_tower: data.result.predictedServiceTower || '',
         GENAI_intent: data.result.predictedIntent || '',
         GENAI_intent_description: data.result.predictedIntentDescription || '',
@@ -372,14 +318,11 @@ async function processCSV() {
         GENAI_summary: data.result.summary || ''
       };
     } catch (err) {
-      console.error(`Error on ticket ${ticket['ticket_id']}:`, err);
+      console.error(`Error on ticket ${ticket['TICKETID']}:`, err);
       bulkResults[startIndex] = {
         ...ticket,
-        service_tower: 'Error',
-        intent: 'Error',
-        intent_description: '',
-        proposed_solution: '',
-        summary: ''
+        GENAI_service_tower: 'Error',
+        GENAI_intent: 'Error'
       };
     } finally {
       completed++;
@@ -406,29 +349,29 @@ async function processCSV() {
   downloadBtn.classList.remove('d-none');
 }
 
-function downloadCSV() {
+function downloadExcel() {
   if (bulkResults.length === 0) return;
 
-  // Preserve original headers + new prediction columns
-  const originalHeaders = Object.keys(bulkResults[0]).filter(h =>
-    !['GENAI_service_tower','GENAI_intent','GENAI_intent_description','GENAI_proposed_solution','GENAI_summary'].includes(h)
-  );
-  const newHeaders = ['GENAI_service_tower','GENAI_intent','GENAI_intent_description','GENAI_proposed_solution','GENAI_summary'];
-  const headers = [...originalHeaders, ...newHeaders];
+  const fileInput = document.getElementById('excelFileInput');
+  const inputFile = fileInput.files[0];
 
-  const csvContent =
-    headers.join(',') + '\n' +
-    bulkResults.map(row =>
-      headers.map(h => `"${(row[h] || '').replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
+  // Default name if input missing
+  let inputName = "ticket_predictions.xlsx";
+  if (inputFile && inputFile.name) {
+    const dotIndex = inputFile.name.lastIndexOf('.');
+    if (dotIndex !== -1) {
+      inputName =
+        inputFile.name.substring(0, dotIndex) + "_PREDICTION_RESULTS.xlsx";
+    } else {
+      inputName = inputFile.name + "_PREDICTION_RESULTS.xlsx";
+    }
+  }
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'ticket_predictions.csv';
-  a.click();
-  URL.revokeObjectURL(url);
+  const ws = XLSX.utils.json_to_sheet(bulkResults);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Predictions");
+
+  XLSX.writeFile(wb, inputName);
 }
 
 function handleEnterSubmit(event) {
