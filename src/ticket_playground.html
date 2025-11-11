@@ -33,7 +33,10 @@
   <div class="text-center mb-5">
     <h1 class="display-5">AI Ticket Classification Playground</h1>
     <small><small class="text-muted" id="app-version">Version ...</small></small>
-    &nbsp;&nbsp;<small><small><small><small><small id="envText">t</small></small></small></small></small>
+    &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small>
+      <small><small><small id="langText">python</small></small></small>
+      <small><small><small id="endpointText"></small></small></small>
+
   </div>
 
   <!-- Tabs -->
@@ -157,8 +160,9 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
  }
 
  let TARGET_ENV = 't';
+ let TARGET_LANG = "python";
 
-const targetEnvParam = urlParams.get('target');
+ const targetEnvParam = urlParams.get('env');
 
  if (targetEnvParam == null) {
 
@@ -169,6 +173,17 @@ const targetEnvParam = urlParams.get('target');
 
  targetEnvChanged();
 
+
+ const targetLangParam = urlParams.get('target');
+
+ if (targetLangParam == null) {
+
+ }
+ else {
+   TARGET_LANG = targetLangParam;
+ }
+
+ targetLangChanged();
 
 
 
@@ -414,10 +429,10 @@ function toggleDiagnostics() {
 
       // Mapping between step names and tokens object keys
       const tokenMap = {
-        serviceTowerPredict: tokenData.service_tower || {},
-        intentPredict: tokenData.intent || {},
-        createTicketSummary: tokenData.ticket_summary || {},
-        createProposedSolution: tokenData.proposed_solution || {}
+        serviceTowerPredict: tokenData.service_tower ||  tokenData.serviceTowerPredict || {},
+        intentPredict: tokenData.intent || tokenData.intentPredict ||  {},
+        createTicketSummary: tokenData.ticket_summary || tokenData.createTicketSummary ||  {},
+        createProposedSolution: tokenData.proposed_solution ||  tokenData.proposedSolution || {}
       };
 
       let totalPrompt = 0;
@@ -434,8 +449,29 @@ function toggleDiagnostics() {
         let prompt = '-';
         let completion = '-';
 
-        if (step !== 'overall') {
-          const tData = tokenMap[step] || {};
+        let tokenStep = "";
+
+        switch (step) {
+          case 'serviceTower':
+            tokenStep = "serviceTowerPredict";
+            break;
+          case 'intent':
+            tokenStep = "intentPredict";
+            break;
+          case 'summariseTicket':
+            tokenStep = "createTicketSummary";
+            break;
+          case 'proposeSolution':
+            tokenStep = "createProposedSolution";
+            break;
+          default:
+            tokenStep = step;
+
+        }
+
+
+        if (tokenStep !== 'overall') {
+          const tData = tokenMap[tokenStep] || {};
           prompt = tData.prompt ?? '-';
           completion = tData.completion ?? '-';
           if (!isNaN(parseInt(tData.prompt))) totalPrompt += parseInt(tData.prompt);
@@ -446,7 +482,7 @@ function toggleDiagnostics() {
         const tdCompletion = document.createElement('td');
 
         // For the "overall" row, display the total tokens
-        if (step === 'overall') {
+        if (tokenStep === 'overall') {
           tdPrompt.textContent = totalPrompt || '-';
           tdCompletion.textContent = totalCompletion || '-';
           tr.classList.add('table-secondary', 'fw-bold');
@@ -481,27 +517,115 @@ function toggleDiagnostics() {
 
 function displayEnv() {
 
-  document.getElementById("envText").innerHTML = TARGET_ENV;
+  var displayEnvs = {"t": "tstnf",
+                     "q": "qas",
+                     "l": "local"}
+
+  document.getElementById("envText").innerHTML = displayEnvs[TARGET_ENV];
 
 
 }
 
-function targetEnvChanged() {
-  switch (TARGET_ENV) {
+function displayLang() {
+
+  if  (TARGET_LANG === "python") {
+    document.getElementById("langText").innerHTML = TARGET_LANG;
+  }
+  else {
+    document.getElementById("langText").innerHTML = "C#";
+  }
+
+
+}
+
+function displayEndpoint() {
+
+
+  document.getElementById("endpointText").innerHTML = "(" + API_ENDPOINT + ")";
+
+
+}
+
+function targetLangOrEnvChanged() {
+   switch (TARGET_ENV) {
     case "t":
-      API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
-      API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+      if (TARGET_LANG == "python") {
+        API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+        API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+      }
+      else {
+        API_ENDPOINT = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict'; //TSTNF
+        API_ENDPOINT_EXTRA = "==g9Bl6tuFzAPH_YpoZW7TIjOzakEJsco07zRGmxbclrIcTGiIC48O9W=edoc?".split('').reverse().join('');  //TSTNF
+
+      }
       break;
     case "q":
-      API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
-      API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+      if (TARGET_LANG == "python") {
+
+          API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
+          API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+      }
+      else {
+           API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
+           API_ENDPOINT_EXTRA = "";  // #TODO -  to be implemented
+      }
       break;
     case "l":
-      API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+
+      if (TARGET_LANG == "python") {
+          API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+      }
+      else {
+         API_ENDPOINT = "http://localhost:7075/api/predict" // C#  local
+      }
       break;
   }
 
+}
+
+function targetEnvChanged() {
+  targetLangChanged();
+  // switch (TARGET_ENV) {
+  //   case "t":
+  //     API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+  //     API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+  //     break;
+  //   case "q":
+  //     API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
+  //     API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+  //     break;
+  //   case "l":
+  //     API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+  //     break;
+  // }
+
+
   displayEnv();
+  displayEndpoint();
+
+
+
+}
+
+function targetLangChanged() {
+  targetLangOrEnvChanged();
+
+  // switch (TARGET_LANG) {
+  //   case "t":
+  //     API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
+  //     API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+  //     break;
+  //   case "q":
+  //     API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
+  //     API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+  //     break;
+  //   case "l":
+  //     API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+  //     break;
+  // }
+
+  displayLang();
+  displayEndpoint();
 
 
 
