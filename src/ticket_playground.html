@@ -85,6 +85,15 @@
                 <tr><th>Proposed Solution</th><td id="solution"></td></tr>
               </tbody>
             </table>
+              <div id="citation-info">
+                   Citation links: ...
+              </div>
+               <div id="feedback-section" class="text-center mt-3 d-none">
+                <span>Was this prediction helpful?</span><br>
+                <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(true)">👍</button>
+                <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(false)">👎</button>
+                <div id="feedback-msg" class="mt-2 text-muted"></div>
+              </div>
               <div class="text-center mt-3">
                 <button id="showDiagnosticsBtn" class="btn btn-info d-none" onclick="toggleDiagnostics()">Show Diagnostics</button>
               </div>
@@ -159,6 +168,17 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
    CONCURRENCY_LIMIT = parseInt(concurrencyLimitParam);
  }
 
+ let TARGET_INDEX = "ticket-qanda-simple";
+ const targetIndexParam = urlParams.get('index');
+
+ if (targetIndexParam == null) {
+
+ }
+ else {
+   TARGET_INDEX = targetIndexParam;
+ }
+
+
  let TARGET_ENV = 't';
  let TARGET_LANG = "python";
 
@@ -200,7 +220,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc })
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX })
     });
     const data = await response.json();
 
@@ -211,11 +231,23 @@ async function submitTicket() {
     document.getElementById('tower').textContent = data.result.predictedServiceTower;
     document.getElementById('intent').textContent = data.result.predictedIntent;
     document.getElementById('intent-description').textContent = data.result.predictedIntentDescription;
-    document.getElementById('solution').textContent = data.result.proposedSolution;
+    document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
     document.getElementById('summary').textContent = data.result.summary;
+
+    let formattedCitationLinks = formatCitationLinks(data.result.proposedSolution, data.citationLinks);
+    citationList = dictToHtmlList(formattedCitationLinks);
+    if (Object.keys(formattedCitationLinks).length == 0) {
+       document.getElementById("citation-info").innerHTML = "Citation reference links: None";
+    }
+    else {
+      document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
+    }
+
+    showFeedbackButtons();
 
     loader.classList.add('d-none');
     resultBox.classList.remove('d-none');
+
 
     // Show toggle button and hide diagnostics table initially
     const diagBtn = document.getElementById('showDiagnosticsBtn');
@@ -229,6 +261,125 @@ async function submitTicket() {
     alert("An error occurred. Please try again.");
   }
 }
+
+function formatCitationLinks(proposedSolution, citationLinks) {
+
+      if (citationLinks == null) {
+        return {};
+      }
+
+      let usedRefIds = [...proposedSolution.matchAll(/\[ref_id:(\d+)\]/g)]
+                .map(m => Number(m[1]));  // extract and convert the capturing group
+      usedRefIds =  usedRefIds.sort((a, b) => a - b);
+
+      var fullReferences = {};
+
+      citationLinks.forEach((link, index) => {
+          if (usedRefIds.includes(parseInt(link.refId))) {
+
+            if (link.url in fullReferences) {
+               fullReferences[link.url].push(link.refId);
+            }
+            else {
+              fullReferences[link.url] = [link.refId];
+            }
+            var xx = 1;
+
+          }
+
+      });
+
+      const entries = Object.entries(fullReferences);
+      // Map over the entries to swap key and value
+      const swappedEntries = entries.map(([key, value]) => [value, key]);
+      // Convert the swapped entries back into an object
+      const fullReferencesSwapped = Object.fromEntries(swappedEntries);
+
+
+      return fullReferencesSwapped;
+}
+
+function dictToHtmlList(dict) {
+  let html = "<ul>\n";
+
+  for (const [key, value] of Object.entries(dict)) {
+    html += `  <li><strong>${key}</strong>: <small>${value}</small></li>\n`;
+  }
+
+  html += "</ul>";
+  return html;
+}
+
+function showFeedbackButtons() {
+  const feedbackSection = document.getElementById('feedback-section');
+  const feedbackMsg = document.getElementById('feedback-msg');
+  feedbackMsg.textContent = '';
+
+  // Reset buttons
+  const upBtn = document.getElementById('feedback-up');
+  const downBtn = document.getElementById('feedback-down');
+  upBtn.disabled = false;
+  downBtn.disabled = false;
+  upBtn.style.border = "";
+  upBtn.style.boxShadow = "";
+  downBtn.style.border = "";
+  downBtn.style.boxShadow = "";
+
+  feedbackSection.classList.remove('d-none');
+}
+
+async function submitFeedback(isPositive) {
+  const feedbackMsg = document.getElementById('feedback-msg');
+  const upBtn = document.getElementById('feedback-up');
+  const downBtn = document.getElementById('feedback-down');
+
+  // Disable buttons immediately
+  upBtn.disabled = true;
+  downBtn.disabled = true;
+
+  // Subtle visual cue: add border & shadow to selected button
+  const selectedBtn = isPositive ? upBtn : downBtn;
+  selectedBtn.style.border = "2px solid #000";
+  selectedBtn.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
+
+  const payload = {
+    ticket: {
+      shortDescription: document.getElementById('shortDesc').value,
+      longDescription: document.getElementById('longDesc').value,
+      serviceTower: document.getElementById('tower').textContent,
+      intent: document.getElementById('intent').textContent,
+      intentDescription: document.getElementById('intent-description').textContent,
+      summary: document.getElementById("summary").textContent,
+      proposedSolution: document.getElementById('solution').textContent,
+    },
+    feedback: isPositive ? "positive" : "negative"
+  };
+  console.log("Feedback entered: ");
+  console.log(payload);
+
+  try {
+    // Optional: send feedback to your API
+    // await fetch('/api/feedback', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(payload)
+    // });
+
+    feedbackMsg.textContent = "Thank you for your feedback!";
+  } catch (err) {
+    console.error("Error sending feedback:", err);
+    feedbackMsg.textContent = "Error submitting feedback. Please try again.";
+    // Re-enable buttons if sending failed
+    upBtn.disabled = false;
+    downBtn.disabled = false;
+    selectedBtn.style.border = "";
+    selectedBtn.style.boxShadow = "";
+  }
+}
+
+
+
+
 
 /* ===== CSV UPLOAD & PARALLEL BULK PREDICTION WITH PROGRESS BAR ===== */
 let bulkResults = [];
@@ -314,7 +465,8 @@ async function processExcel() {
     try {
       const payload = {
         shortDescription: ticket['SHORT_DESCRIPTION'],
-        description: ticket['DESCRIPTION']
+        description: ticket['DESCRIPTION'],
+        targetIndex: TARGET_INDEX
       };
 
       const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
@@ -567,7 +719,7 @@ function targetLangOrEnvChanged() {
       }
       else {
            API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
-           API_ENDPOINT_EXTRA = "";  // #TODO -  to be implemented
+           API_ENDPOINT_EXTRA = "==gewZ1wuFzABZKuyz_K9LFe29NXjaJR4x689iCs_Ab2N0B5_qyJX7nn=edoc?".split('').reverse().join('');  // QAS
       }
       break;
     case "l":
