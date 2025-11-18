@@ -24,6 +24,14 @@
       100% { transform: scale(1); opacity: 1; }
     }
     img.pulsate { width: 100px; animation: pulse 2s infinite; }
+    #star-rating .star {
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    #star-rating .star.hover,
+    #star-rating .star.selected {
+      color: gold;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -88,10 +96,22 @@
               <div id="citation-info">
                    Citation links: ...
               </div>
-               <div id="feedback-section" class="text-center mt-3 d-none">
+              <div id="feedback-section" class="text-center mt-3 d-none">
                 <span>Was this information helpful?</span><br>
                 <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(true)">👍</button>
                 <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(false)">👎</button>
+
+                <div class="mt-2">
+                  <span>Rate this solution:</span><br>
+                  <div id="star-rating" style="font-size: 1.5rem;">
+                    <span class="star" data-value="1">☆</span>
+                    <span class="star" data-value="2">☆</span>
+                    <span class="star" data-value="3">☆</span>
+                    <span class="star" data-value="4">☆</span>
+                    <span class="star" data-value="5">☆</span>
+                  </div>
+                </div>
+
                 <div id="feedback-msg" class="mt-2 text-muted"></div>
               </div>
               <div class="text-center mt-3">
@@ -315,7 +335,7 @@ function showFeedbackButtons() {
   const feedbackMsg = document.getElementById('feedback-msg');
   feedbackMsg.textContent = '';
 
-  // Reset buttons
+  // Reset thumbs up/down buttons
   const upBtn = document.getElementById('feedback-up');
   const downBtn = document.getElementById('feedback-down');
   upBtn.disabled = false;
@@ -324,6 +344,14 @@ function showFeedbackButtons() {
   upBtn.style.boxShadow = "";
   downBtn.style.border = "";
   downBtn.style.boxShadow = "";
+
+  // Reset star rating
+  selectedStar = 0;
+  stars.forEach(star => {
+    star.classList.remove('selected');
+    star.style.pointerEvents = 'auto';  // re-enable clicks
+    star.style.cursor = 'pointer';
+  });
 
   feedbackSection.classList.remove('d-none');
 }
@@ -377,6 +405,77 @@ async function submitFeedback(isPositive) {
   }
 }
 
+let selectedStar = 0;
+const stars = document.querySelectorAll('#star-rating .star');
+
+stars.forEach(star => {
+  star.addEventListener('mouseover', () => {
+    const val = parseInt(star.dataset.value);
+    highlightStars(val);
+  });
+
+  star.addEventListener('mouseout', () => {
+    highlightStars(selectedStar);
+  });
+
+  star.addEventListener('click', () => {
+    if (selectedStar === 0) {  // only allow selection once
+      selectedStar = parseInt(star.dataset.value);
+      highlightStars(selectedStar);
+      disableStars();
+      submitStarFeedback(selectedStar);
+    }
+  });
+});
+
+function highlightStars(rating) {
+  stars.forEach(star => {
+    const val = parseInt(star.dataset.value);
+    if (val <= rating) {
+      star.classList.add('selected');
+    } else {
+      star.classList.remove('selected');
+    }
+  });
+}
+
+function disableStars() {
+  stars.forEach(star => {
+    star.style.pointerEvents = 'none'; // disable further clicks
+    star.style.cursor = 'default';
+  });
+}
+
+async function submitStarFeedback(rating) {
+  const feedbackMsg = document.getElementById('feedback-msg');
+  try {
+    const payload = {
+      ticket: {
+        shortDescription: document.getElementById('shortDesc').value,
+        longDescription: document.getElementById('longDesc').value,
+        serviceTower: document.getElementById('tower').textContent,
+        intent: document.getElementById('intent').textContent,
+        intentDescription: document.getElementById('intent-description').textContent,
+        summary: document.getElementById("summary").textContent,
+        proposedSolution: document.getElementById('solution').textContent,
+      },
+      starRating: rating
+    };
+    console.log("Star rating submitted:", payload);
+
+    // Optional: send payload to your API
+    // await fetch('/api/starFeedback', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(payload)
+    // });
+
+    feedbackMsg.textContent = `Thank you for rating ${rating} star(s)!`;
+  } catch (err) {
+    console.error("Error sending star feedback:", err);
+    feedbackMsg.textContent = "Error submitting star rating. Please try again.";
+  }
+}
 
 
 
