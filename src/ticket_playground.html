@@ -295,13 +295,20 @@ function formatCitationLinks(proposedSolution, citationLinks) {
       var fullReferences = {};
 
       citationLinks.forEach((link, index) => {
-          if (usedRefIds.includes(parseInt(link.refId))) {
+          var refId;
+          if (link.refId) {
+             refId = link.refId;
+          }
+          else {
+             refId = link.refid;
+          }
+          if (usedRefIds.includes(parseInt(refId))) {
 
             if (link.url in fullReferences) {
-               fullReferences[link.url].push(link.refId);
+               fullReferences[link.url].push(refId);
             }
             else {
-              fullReferences[link.url] = [link.refId];
+              fullReferences[link.url] = [refId];
             }
             var xx = 1;
 
