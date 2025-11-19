@@ -226,6 +226,10 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
  targetLangChanged();
 
 
+ // === Bulk row start/end range ===
+let START_ROW = parseInt(urlParams.get('start') ?? "1");   // default row 1
+let END_ROW = parseInt(urlParams.get('end') ?? "-1");      // -1 means last row
+
 
 async function submitTicket() {
   const loader = document.getElementById('myImage');
@@ -528,8 +532,20 @@ async function processExcel() {
     return;
   }
 
-  const tickets = jsonData.filter(t => t['SHORT_DESCRIPTION'] && t['DESCRIPTION']);
+  // Tickets with required columns
+  let tickets = jsonData.filter(t => t['SHORT_DESCRIPTION'] && t['DESCRIPTION']);
+
+  // Apply start/end row filtering (1-based indexing)
+  if (END_ROW === -1) END_ROW = tickets.length;      // last row if not provided
+
+  // Convert to zero-based JS array slice
+  const startIndex = Math.max(START_ROW - 1, 0);
+  const endIndex   = Math.min(END_ROW, tickets.length);
+
+  tickets = tickets.slice(startIndex, endIndex);
+
   const total = tickets.length;
+
   let completed = 0;
   const startTime = Date.now();
 
@@ -562,6 +578,15 @@ async function processExcel() {
     progressBar.style.width = percent + '%';
     progressBar.textContent = percent + '%';
     progressText.innerHTML = `Processed ${completed}/${total} (${percent}%) — ETA: ${etaFormatted}`;
+
+  //   statusDiv.innerHTML = `
+  //   <div class="mb-2 text-info">
+  //     Processing rows ${START_ROW} to ${END_ROW === -1 ? 'end' : END_ROW}
+  //     <br>Found ${total} tickets to classify...
+  //   </div>
+  //   ...
+  // `;
+
   };
 
   async function processBatch(startIndex) {
@@ -628,23 +653,33 @@ function downloadExcel() {
   const fileInput = document.getElementById('excelFileInput');
   const inputFile = fileInput.files[0];
 
-  // Default name if input missing
-  let inputName = "ticket_predictions.xlsx";
+  // Determine base input name
+  let baseName = "ticket_predictions";
   if (inputFile && inputFile.name) {
     const dotIndex = inputFile.name.lastIndexOf('.');
-    if (dotIndex !== -1) {
-      inputName =
-        inputFile.name.substring(0, dotIndex) + "_PREDICTION_RESULTS.xlsx";
-    } else {
-      inputName = inputFile.name + "_PREDICTION_RESULTS.xlsx";
-    }
+    baseName = dotIndex !== -1 ? inputFile.name.substring(0, dotIndex) : inputFile.name;
   }
 
-  const ws = XLSX.utils.json_to_sheet(bulkResults);
+  // Determine output filename
+  let outputName;
+  const startParamExists = urlParams.has('start');
+  const endParamExists = urlParams.has('end');
+
+  if (startParamExists || endParamExists) {
+    // Only include row numbers if either param exists
+    const endRowForName = END_ROW === -1 ? (START_ROW + bulkResults.length - 1) : END_ROW;
+    outputName = `${baseName}_rows_${START_ROW}_to_${endRowForName}_PREDICTION_RESULTS.xlsx`;
+  } else {
+    outputName = `${baseName}_PREDICTION_RESULTS.xlsx`;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(
+    bulkResults.filter(r => r != null)
+  );
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Predictions");
 
-  XLSX.writeFile(wb, inputName);
+  XLSX.writeFile(wb, outputName);
 }
 
 function handleEnterSubmit(event) {
