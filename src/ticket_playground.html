@@ -154,7 +154,10 @@
             <input type="file" class="form-control" id="excelFileInput" accept=".xlsx,.xls">
           </div>
           <div class="text-center">
-            <button class="btn btn-success" onclick="processExcel()">Upload & Predict</button>
+            <button id="bulkSubmitBtn" class="btn btn-success" onclick="processExcel()">Upload & Predict</button>
+          </div>
+          <div class="text-center mt-2">
+                 <button id="cancelBulkBtn" class="btn btn-danger d-none" onclick="cancelBulkProcessing()">Cancel Processing</button>
           </div>
           <div class="mt-3" id="bulkStatus"></div>
           <div class="text-center mt-3">
@@ -168,6 +171,8 @@
 
 <script>
 let latestTimeTaken = null;
+
+let cancelRequested = false;
 
 // let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
 // let API_ENDPOINT = "http://localhost:7075/api/predict"; // C# local
@@ -507,12 +512,20 @@ envChar = "t";
 
 /* ===== ROBUST CSV PARSER THAT HANDLES QUOTES, COMMAS & LINE BREAKS ===== */
 async function processExcel() {
+  const bulkSubmitBtn = document.getElementById('bulkSubmitBtn');
+
+  // 🔹 Disable button and show "Processing..."
+  bulkSubmitBtn.disabled = true;
+  bulkSubmitBtn.textContent = "Processing...";
+
   const fileInput = document.getElementById('excelFileInput');
   const statusDiv = document.getElementById('bulkStatus');
   const downloadBtn = document.getElementById('downloadExcelBtn');
   bulkResults = [];
   downloadBtn.classList.add('d-none');
   statusDiv.innerHTML = '';
+  document.getElementById("cancelBulkBtn").classList.remove('d-none');
+  document.getElementById("cancelBulkBtn").disabled = false;
 
   if (!fileInput.files.length) {
     alert('Please select an Excel file first.');
@@ -558,6 +571,8 @@ async function processExcel() {
   let completed = 0;
   const startTime = Date.now();
 
+  cancelRequested = false;
+
   statusDiv.innerHTML = `
     <div class="mb-2 text-info">Processing ${total} tickets
       <span id="initialisationMsg">... Initialising</span>
@@ -598,49 +613,83 @@ async function processExcel() {
 
   };
 
-  async function processBatch(startIndex) {
-    const ticket = tickets[startIndex];
-    if (!ticket) return;
+    async function processBatch(startIndex) {
+      // STOP if user cancelled
+      if (cancelRequested) return;
 
-    try {
-      const payload = {
-        shortDescription: ticket['SHORT_DESCRIPTION'],
-        description: ticket['DESCRIPTION'],
-        targetIndex: TARGET_INDEX
-      };
+      const ticket = tickets[startIndex];
+      if (!ticket) return;
 
-      const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
+      try {
+        const payload = {
+          shortDescription: ticket['SHORT_DESCRIPTION'],
+          description: ticket['DESCRIPTION'],
+          targetIndex: TARGET_INDEX
+        };
 
-      bulkResults[startIndex] = {
-        ...ticket,
-        GENAI_service_tower: data.result.predictedServiceTower || '',
-        GENAI_intent: data.result.predictedIntent || '',
-        GENAI_intent_description: data.result.predictedIntentDescription || '',
-        GENAI_proposed_solution: data.result.proposedSolution || '',
-        GENAI_summary: data.result.summary || ''
-      };
-    } catch (err) {
-      console.error(`Error on ticket ${ticket['TICKETID']}:`, err);
-      bulkResults[startIndex] = {
-        ...ticket,
-        GENAI_service_tower: 'Error',
-        GENAI_intent: 'Error'
-      };
-    } finally {
-      completed++;
-      updateProgress();
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        // If user cancels while fetch is in flight → abort it
+        if (cancelRequested) {
+          controller.abort();
+          return;
+        }
+
+        const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal
+        });
+
+        if (response.status == 500) {
+           console.log('aha - 500 error hit');
+           const errData = await response.text();
+           let errExtra = "";
+           if (errData === 'Error: TypeError: Failed to fetch') {
+             errExtra = " - likely CORS error";
+           }
+           console.log('aha - error data: ' + errData + errExtra);
+           throw(errData);
+        }
+
+        if (!cancelRequested) {
+          const data = await response.json();
+
+          bulkResults[startIndex] = {
+            ...ticket,
+            GENAI_service_tower: data.result.predictedServiceTower || '',
+            GENAI_intent: data.result.predictedIntent || '',
+            GENAI_intent_description: data.result.predictedIntentDescription || '',
+            GENAI_proposed_solution: data.result.proposedSolution || '',
+            GENAI_summary: data.result.summary || ''
+          };
+        }
+      } catch (err) {
+        console.warn(`Cancelled or failed ticket ${ticket['TICKETID']}:`, err);
+        let errExtra = "";
+        if (String(err).startsWith("TypeError: Failed to fetch")) {
+          errExtra = " - likely CORS issue";
+        }
+
+        bulkResults[startIndex] = {
+          ...ticket,
+          GENAI_service_tower: cancelRequested ? 'Cancelled' : 'Error',
+          GENAI_intent: cancelRequested ? 'Cancelled' : ('Error: ' + err + errExtra),
+        };
+      } finally {
+        completed++;
+        updateProgress();
+      }
+
+      if (cancelRequested) return;
+
+      const nextIndex = startIndex + CONCURRENCY_LIMIT;
+      if (nextIndex < tickets.length) {
+        await processBatch(nextIndex);
+      }
     }
-
-    const nextIndex = startIndex + CONCURRENCY_LIMIT;
-    if (nextIndex < tickets.length) {
-      await processBatch(nextIndex);
-    }
-  }
 
   const workers = [];
   for (let i = 0; i < CONCURRENCY_LIMIT && i < tickets.length; i++) {
@@ -649,11 +698,40 @@ async function processExcel() {
 
   await Promise.all(workers);
 
-  progressBar.classList.remove('progress-bar-animated');
-  progressBar.classList.add('bg-success');
-  progressBar.textContent = '100%';
-  progressText.innerHTML = `✅ Completed processing all ${bulkResults.length} tickets.`;
-  downloadBtn.classList.remove('d-none');
+
+  const progressBarNew = document.getElementById('progressBar');
+  const progressTextNew = document.getElementById('progressText');
+
+  bulkSubmitBtn.disabled = false;
+  bulkSubmitBtn.textContent = "Upload & Predict"; // restore original text
+
+  cancelBtn = document.getElementById('cancelBulkBtn');
+
+  cancelBtn.classList.add('d-none'); // hide cancel button
+
+  if (cancelRequested) {
+    progressBarNew.classList.remove('progress-bar-animated');
+    progressBarNew.classList.add('bg-warning');
+    progressTextNew.innerHTML = `⚠️ Processing cancelled — ${completed} tickets completed.`;
+
+    // ✅ FIX: remove the lingering "finishing active tasks" text
+        document.getElementById("initialisationMsg").remove();
+        document.getElementById("cancelReqMsg").innerHTML = ""; //rbm
+
+
+    document.getElementById('downloadExcelBtn').classList.remove('d-none');
+    cancelBtn.classList.add('d-none');
+    return;
+}
+
+// Normal completion
+progressBarNew.classList.remove('progress-bar-animated');
+progressBarNew.classList.add('bg-success');
+progressBarNew.textContent = '100%';
+progressTextNew.innerHTML = `✅ Completed processing all ${bulkResults.length} tickets.`;
+
+document.getElementById('downloadExcelBtn').classList.remove('d-none');
+
 }
 
 function downloadExcel() {
@@ -931,6 +1009,34 @@ function targetLangChanged() {
 
 
 
+}
+
+function cancelBulkProcessing() {
+  document.getElementById("initialisationMsg").hidden = true;
+
+  cancelRequested = true;
+
+  // ✅ FIX: hide the "Cancellation requested — finishing active tasks.." message immediately
+  const initMsg = document.getElementById("initialisationMsg");
+  if (initMsg) initMsg.hidden = true;
+
+
+  const statusDiv = document.getElementById('bulkStatus');
+  const progressText = document.getElementById('progressText');
+  const progressBar = document.getElementById('progressBar');
+  const cancelBtn = document.getElementById('cancelBulkBtn');
+
+  cancelBtn.disabled = true;
+  cancelBtn.textContent = "Cancelling...";
+
+  progressBar.classList.remove('progress-bar-animated');
+  progressBar.classList.add('bg-warning');
+  progressText.innerHTML = "⏳ Cancelling remaining tasks...";
+
+  statusDiv.insertAdjacentHTML(
+    "beforeend",
+    `<div id="cancelReqMsg" class="mt-2 text-danger">Cancellation requested — finishing active tasks...</div>`
+  );
 }
 
 
