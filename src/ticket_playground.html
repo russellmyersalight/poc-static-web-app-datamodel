@@ -186,6 +186,8 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
 
 let API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback";
 
+let CUSTOMER_CODE = "Z05";
+
  const queryString = window.location.search;
  const urlParams = new URLSearchParams(queryString);
 
@@ -267,7 +269,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX })
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX})
     });
     const data = await response.json();
 
@@ -324,8 +326,18 @@ function prepareJsonFeedback(data, randId, isHelpful=null, feedbackText="") {
     var j =  {};
 
     if (TARGET_LANG == "python") {
-      j.id = randId;
-      j.ticketId = "";
+      // j.id = randId;
+      if ('ticketId' in data.query) {
+        if ((data.query.ticketId != null) && (data.query.ticketId != "")) {
+          j.ticketId = data.query.ticketId  + " - " + randId;
+        }
+        else {
+          j.ticketId = randId;
+        }
+      }
+      else {
+        j.ticketId = randId;
+      }
       j.shortDescription = data.query.shortDescription;
       j.description = data.query.description;
       j.predictedServiceTower =data.result.predictedServiceTower;
@@ -338,13 +350,31 @@ function prepareJsonFeedback(data, randId, isHelpful=null, feedbackText="") {
       j.apiVersion = data.apiVersion;
       j.status = data.status;
       j.isHelpful = isHelpful;
-      j.feedbackText = feedbackText;
+      j.feedback = feedbackText;
       const now = new Date();
       j.createdAt = now.toISOString();
       j.sourceEnv = TARGET_ENV;
     }
     else {
-      j.description = "todo: charp feedback format";
+      let deepCopyData = structuredClone(data);
+      if ('ticketId' in deepCopyData.query) {
+        if ((deepCopyData.query.ticketId != null) && (deepCopyData.query.ticketId != "")) {
+          deepCopyData.query.ticketId =  deepCopyData.query.ticketId  +  " - " + randId;
+        }
+        else {
+          deepCopyData.query.ticketId = randId;
+        }
+      }
+      else {
+        deepCopyData.query.ticketId = randId;
+      }
+
+      j = {
+        "prediction": deepCopyData,
+        "isHelpful": true,
+        "feedback": "",
+        "customerCode": CUSTOMER_CODE
+      }
     }
 
 
@@ -455,11 +485,11 @@ async function submitFeedbackJson(isPositive) {
     selectedBtn.style.border = "2px solid #000";
     selectedBtn.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
 
-     if (feedbackData.feedbackText == "") {
-       feedbackData.feedbackText = isPositive ?  "ThumbsUp" : "ThumbsDown";
+     if (feedbackData.feedback == "") {
+       feedbackData.feedback = isPositive ?  "ThumbsUp" : "ThumbsDown";
      }
      else {
-       feedbackData.feedbackText = (isPositive ?  "ThumbsUp" : "ThumbsDown") + " - " + feedbackData.feedbackText;
+       feedbackData.feedback = (isPositive ?  "ThumbsUp" : "ThumbsDown") + " - " + feedbackData.feedback;
      }
      feedbackData.isHelpful = isPositive;
 
@@ -565,11 +595,11 @@ async function submitStarFeedbackJson(rating) {
 
      const feedbackMsg = document.getElementById('feedback-msg');
 
-     if (feedbackData.feedbackText == "") {
-       feedbackData.feedbackText = "" + rating + " stars";
+     if (feedbackData.feedback == "") {
+       feedbackData.feedback = "" + rating + " stars";
      }
      else {
-       feedbackData.feedbackText = feedbackData.feedbackText + " - " + rating + " stars";
+       feedbackData.feedback = feedbackData.feedback + " - " + rating + " stars";
      }
 
      console.log("Star rating submitted:", feedbackData);
@@ -1047,8 +1077,10 @@ function targetLangOrEnvChanged() {
       else {
         API_ENDPOINT = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict'; //TSTNF
         API_ENDPOINT_EXTRA = "==g9Bl6tuFzAPH_YpoZW7TIjOzakEJsco07zRGmxbclrIcTGiIC48O9W=edoc?".split('').reverse().join('');  //TSTNF
+        API_ENDPOINT_FEEDBACK = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict/feedback'; //TSTNF
 
       }
+      CUSTOMER_CODE = "Z05";
       break;
     case "q":
       if (TARGET_LANG == "python") {
@@ -1060,7 +1092,9 @@ function targetLangOrEnvChanged() {
       else {
            API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
            API_ENDPOINT_EXTRA = "==gewZ1wuFzABZKuyz_K9LFe29NXjaJR4x689iCs_Ab2N0B5_qyJX7nn=edoc?".split('').reverse().join('');  // QAS
+           API_ENDPOINT_FEEDBACK = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict/feedback';  //QAS
       }
+      CUSTOMER_CODE = "ZCS";
       break;
     case "l":
 
@@ -1070,7 +1104,9 @@ function targetLangOrEnvChanged() {
       }
       else {
          API_ENDPOINT = "http://localhost:7075/api/predict" // C#  local
+         API_ENDPOINT_FEEDBACK = "http://localhost:7075/api/predict/feedback";
       }
+      CUSTOMER_CODE = "Z05";
       break;
   }
 
