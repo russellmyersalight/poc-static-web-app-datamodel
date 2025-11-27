@@ -98,8 +98,8 @@
               </div>
               <div id="feedback-section" class="text-center mt-3 d-none">
                 <span>Was this information helpful?</span><br>
-                <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(true)">👍</button>
-                <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedback(false)">👎</button>
+                <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(true)">👍</button>
+                <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(false)">👎</button>
 
                 <div class="mt-2">
                   <span>Rate this solution:</span><br>
@@ -170,6 +170,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+
+let ticketToken = null;
+let feedbackData = null;
+
 let latestTimeTaken = null;
 
 let cancelRequested = false;
@@ -179,6 +183,8 @@ let cancelRequested = false;
 let API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
 
 let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+
+let API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback";
 
  const queryString = window.location.search;
  const urlParams = new URLSearchParams(queryString);
@@ -236,7 +242,13 @@ let START_ROW = parseInt(urlParams.get('start') ?? "1");   // default row 1
 let END_ROW = parseInt(urlParams.get('end') ?? "-1");      // -1 means last row
 
 
+
+
+
 async function submitTicket() {
+  ticketToken = null;
+  feedbackdata = null;
+
   const loader = document.getElementById('myImage');
   const resultBox = document.getElementById('result');
   const submitBtn = document.getElementById('singleSubmitBtn');
@@ -279,6 +291,13 @@ async function submitTicket() {
       document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
     }
 
+    const ticketToken = generateRandomString(16); // Generates a 16-character token
+    console.log(ticketToken);
+
+    feedbackData = prepareJsonFeedback(data, ticketToken);
+    await callFeedbackEndpoint();  // Log results (even before feedback  - as user may not enter feeedback)
+
+
     showFeedbackButtons();
 
     loader.classList.add('d-none');
@@ -299,6 +318,36 @@ async function submitTicket() {
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit";
   }
+}
+
+function prepareJsonFeedback(data, randId, isHelpful=null, feedbackText="") {
+    var j =  {};
+
+    if (TARGET_LANG == "python") {
+      j.id = randId;
+      j.ticketId = "";
+      j.shortDescription = data.query.shortDescription;
+      j.description = data.query.description;
+      j.predictedServiceTower =data.result.predictedServiceTower;
+      j.predictedIntent = data.result.predictedIntent;
+      j.predictedIntentDescription = data.result.predictedIntentDescription;
+      j.summary = data.result.summary;
+      j.proposedSolution = data.result.proposedSolution;
+      j.method = data.agentsMethod.method;
+      j.model = data.agentsMethod.model;
+      j.apiVersion = data.apiVersion;
+      j.status = data.status;
+      j.isHelpful = isHelpful;
+      j.feedbackText = feedbackText;
+      const now = new Date();
+      j.createdAt = now.toISOString();
+    }
+    else {
+      j.description = "todo: charp feedback format";
+    }
+
+
+    return j;
 }
 
 function formatCitationLinks(proposedSolution, citationLinks) {
@@ -382,6 +431,45 @@ function showFeedbackButtons() {
   feedbackSection.classList.remove('d-none');
 }
 
+async function callFeedbackEndpoint() {
+    await fetch(API_ENDPOINT_FEEDBACK, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(feedbackData)
+    });
+}
+
+async function submitFeedbackJson(isPositive) {
+
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const upBtn = document.getElementById('feedback-up');
+    const downBtn = document.getElementById('feedback-down');
+
+    // Disable buttons immediately
+    upBtn.disabled = true;
+    downBtn.disabled = true;
+
+    // Subtle visual cue: add border & shadow to selected button
+    const selectedBtn = isPositive ? upBtn : downBtn;
+    selectedBtn.style.border = "2px solid #000";
+    selectedBtn.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
+
+     if (feedbackData.feedbackText == "") {
+       feedbackData.feedbackText = isPositive ?  "ThumbsUp" : "ThumbsDown";
+     }
+     else {
+       feedbackData.feedbackText = (isPositive ?  "ThumbsUp" : "ThumbsDown") + " - " + feedbackData.feedbackText;
+     }
+     feedbackData.isHelpful = isPositive;
+
+    feedbackMsg.textContent = "Thank you for your feedback!";
+
+    await callFeedbackEndpoint();
+    var qq = 1;
+
+}
+
+// Deprecated  - now uses submitFeedbackJson
 async function submitFeedback(isPositive) {
   const feedbackMsg = document.getElementById('feedback-msg');
   const upBtn = document.getElementById('feedback-up');
@@ -449,7 +537,7 @@ stars.forEach(star => {
       selectedStar = parseInt(star.dataset.value);
       highlightStars(selectedStar);
       disableStars();
-      submitStarFeedback(selectedStar);
+      submitStarFeedbackJson(selectedStar);
     }
   });
 });
@@ -472,6 +560,26 @@ function disableStars() {
   });
 }
 
+async function submitStarFeedbackJson(rating) {
+
+     const feedbackMsg = document.getElementById('feedback-msg');
+
+     if (feedbackData.feedbackText == "") {
+       feedbackData.feedbackText = "" + rating + " stars";
+     }
+     else {
+       feedbackData.feedbackText = feedbackData.feedbackText + " - " + rating + " stars";
+     }
+
+     console.log("Star rating submitted:", feedbackData);
+     feedbackMsg.textContent = `Thank you for rating ${rating} star(s)!`;
+     await callFeedbackEndpoint();
+
+     var qq = 1;
+
+}
+
+// Deprecated  - now uses submitStarFeedbackJson
 async function submitStarFeedback(rating) {
   const feedbackMsg = document.getElementById('feedback-msg');
   try {
@@ -933,6 +1041,7 @@ function targetLangOrEnvChanged() {
       if (TARGET_LANG == "python") {
         API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
         API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
+        API_ENDPOINT_FEEDBACK = "https://func-t-weu-assistant-genai-05.azurewebsites.net/api/predictfeedback"
       }
       else {
         API_ENDPOINT = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict'; //TSTNF
@@ -945,6 +1054,7 @@ function targetLangOrEnvChanged() {
 
           API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
           API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
+          API_ENDPOINT_FEEDBACK = "https://func-t-weu-assistant-genai-05.azurewebsites.net/api/predictfeedback"
       }
       else {
            API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
@@ -955,6 +1065,7 @@ function targetLangOrEnvChanged() {
 
       if (TARGET_LANG == "python") {
           API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
+          API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback"
       }
       else {
          API_ENDPOINT = "http://localhost:7075/api/predict" // C#  local
@@ -1040,6 +1151,17 @@ function cancelBulkProcessing() {
   );
 }
 
+function generateRandomString(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0987654321';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+
 
 
 
@@ -1055,6 +1177,7 @@ function cancelBulkProcessing() {
       if (versionEl) {
         versionEl.textContent = `Version ${config.version}`;
       }
+
     })
     .catch(error => {
       console.error('Error loading config:', error);
