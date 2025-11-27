@@ -279,7 +279,7 @@ async function submitTicket() {
 
     document.getElementById('tower').textContent = data.result.predictedServiceTower;
     document.getElementById('intent').textContent = data.result.predictedIntent;
-    if (data.result.predictedIntentDescription === 'Missing description')
+    // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
     document.getElementById('summary').textContent = data.result.summary;
