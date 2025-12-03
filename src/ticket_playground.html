@@ -167,6 +167,21 @@
       </div>
 </div>
 
+ <!-- Modal: Solution Evaluator -->
+<div class="modal fade" id="solutionEvaluatorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Proposed Solution - Evaluation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <pre id="solutionEvaluatorJson" style="white-space: pre-wrap;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -272,6 +287,8 @@ async function submitTicket() {
       body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX})
     });
     const data = await response.json();
+    // Store evaluator dictionary for modal display
+    window.solutionEvaluator = data.result.solutionEvaluator || {};
 
     // Store timeTaken globally for diagnostics
     latestTimeTaken = data.timeTaken;
@@ -281,7 +298,25 @@ async function submitTicket() {
     document.getElementById('intent').textContent = data.result.predictedIntent;
     // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
-    document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
+    //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
+    const solElem = document.getElementById('solution');
+    solElem.textContent = data.result.proposedSolution.length == 0
+        ? "No knowledge articles found"
+        : data.result.proposedSolution;
+
+    // Add hover → modal trigger
+    solElem.style.cursor = "pointer";
+    solElem.title = "Click to view solution evaluator details";
+    solElem.onclick = () => {
+        document.getElementById('solutionEvaluatorJson').textContent =
+            JSON.stringify(window.solutionEvaluator, null, 2);
+
+        const modal = new bootstrap.Modal(document.getElementById('solutionEvaluatorModal'));
+        modal.show();
+    };
+
+
+
     document.getElementById('summary').textContent = data.result.summary;
 
     let formattedCitationLinks = formatCitationLinks(data.result.proposedSolution, data.citationLinks);
