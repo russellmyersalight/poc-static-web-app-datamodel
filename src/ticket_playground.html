@@ -730,7 +730,7 @@ async function processExcel() {
   }
 
   // Tickets with required columns
-  let tickets = jsonData.filter(t => t['SHORT_DESCRIPTION'] && t['DESCRIPTION']);
+  let tickets = jsonData.filter(t => t['SHORT_DESCRIPTION']) // && t['DESCRIPTION']);
 
   // Apply start/end row filtering (1-based indexing)
   if (END_ROW === -1) END_ROW = tickets.length;      // last row if not provided
@@ -838,7 +838,9 @@ async function processExcel() {
             GENAI_intent: data.result.predictedIntent || '',
             GENAI_intent_description: data.result.predictedIntentDescription || '',
             GENAI_proposed_solution: data.result.proposedSolution || '',
-            GENAI_summary: data.result.summary || ''
+            GENAI_summary: data.result.summary || '',
+            GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",
+            GENAI_solution_evaluation_justification: data.result.solutionEvaluator?.justification ?? ""
           };
         }
       } catch (err) {
