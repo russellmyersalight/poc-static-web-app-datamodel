@@ -44,6 +44,8 @@
     &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small>
       <small><small><small id="langText">python</small></small></small>
       <small><small><small id="endpointText"></small></small></small>
+      <span>&nbsp;&nbsp;&nbsp;</SPAN>
+      <small><small><small id="gccText"></small></small></small>
 
   </div>
 
@@ -201,7 +203,7 @@ let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7
 
 let API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback";
 
-let CUSTOMER_CODE = "Z05";
+let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
 
  const queryString = window.location.search;
  const urlParams = new URLSearchParams(queryString);
@@ -228,7 +230,7 @@ let CUSTOMER_CODE = "Z05";
 
 
  let TARGET_ENV = 'q';
- let TARGET_LANG = "python";
+ let TARGET_LANG = "csharp";
 
  const targetEnvParam = urlParams.get('env');
 
@@ -252,6 +254,20 @@ let CUSTOMER_CODE = "Z05";
  }
 
  targetLangChanged();
+
+ let GCC = "JUM";
+
+ const gccParam = urlParams.get('gcc');
+
+ if (gccParam == null) {
+
+ }
+ else {
+   GCC = gccParam;
+ }
+
+ gccChanged();
+
 
 
  // === Bulk row start/end range ===
@@ -284,7 +300,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX})
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC})
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
@@ -1103,6 +1119,12 @@ function displayEndpoint() {
 
 }
 
+
+function displayGcc() {
+   document.getElementById("gccText").innerHTML = " GCC: " + GCC;
+
+}
+
 function targetLangOrEnvChanged() {
    switch (TARGET_ENV) {
     case "t":
@@ -1194,6 +1216,12 @@ function targetLangChanged() {
   displayEndpoint();
 
 
+
+}
+
+
+function gccChanged() {
+  displayGcc();
 
 }
 
