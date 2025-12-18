@@ -815,7 +815,8 @@ async function processExcel() {
         const payload = {
           shortDescription: ticket['SHORT_DESCRIPTION'],
           description: ticket['DESCRIPTION'],
-          targetIndex: TARGET_INDEX
+          targetIndex: TARGET_INDEX,
+          gcc: GCC
         };
 
         const controller = new AbortController();
