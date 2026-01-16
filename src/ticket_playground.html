@@ -80,6 +80,7 @@
           </div>
           <div class="text-center mt-3">
             <button id="singleSubmitBtn" type="button" class="btn btn-primary btn-lg" onclick="submitTicket()">Submit</button>
+            <button id="testProxySubmitBtn" type="button" class="btn btn-secondary btn-sm" onclick="testProxy()">Test Proxy</button>
           </div>
         </form>
 
@@ -276,7 +277,16 @@ let END_ROW = parseInt(urlParams.get('end') ?? "-1");      // -1 means last row
 
 
 
+async function testProxy() {
+   const res = await fetch(`/api/proxy/api/predict?tstparam=blah`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+  if (!res.ok)  console.log("proxy call res is not ok");  //throw new Error(`Proxy failed: ${res.status}`);
+  console.log("result of proxy call:")
+  console.log(res.json());
 
+}
 
 async function submitTicket() {
   ticketToken = null;
