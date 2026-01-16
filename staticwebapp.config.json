@@ -5,5 +5,8 @@
       "route": "/api/proxy/*"
 
     }
-  ]
+  ],
+  "platform": {
+    "apiRuntime": "python:3.10"
+  }
 }
