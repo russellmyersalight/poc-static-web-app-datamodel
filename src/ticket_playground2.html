@@ -85,6 +85,42 @@
         </form>
 
         <div class="card shadow-sm p-4 mt-4 d-none" id="result">
+          <h2 class="mb-4">Language Detection</h2>
+             <!--div>
+             <p>Language detected: <span id="language-detected">lang</span> </p>
+             <p>Tone detected: <span id="tone-detected">tone</span></p>
+             </div-->
+             <table class="table table-striped table-sm">
+              <!--colgroup>
+                <col style="width: 20%;">
+                <col style="width: 40%;">
+                <col style="width: 40%;">
+
+              </colgroup-->
+              <thead>
+             <tr>
+                <th scope="col"></th>
+                <th scope="col">userQuery</th>
+                <th scope="col">proposedSolution</th>
+              </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Language Detected</th>
+                  <td><span id="language-detected">lang</span></td>
+                  <td><span id="language-detected-solution">lang</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">Tone Detected</th>
+                  <td><span id="tone-detected">tone</span></td>
+                  <td><span id="tone-detected-solution">tone</span></td>
+
+
+                </tr>
+              </tbody>
+            </table>
+
+
           <h2 class="mb-4">Predictions</h2>
             <div class="table-responsive">
             <table class="table table-bordered table-striped">
@@ -93,7 +129,8 @@
                 <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
                 <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
                 <tr><th>Summary</th><td id="summary"></td></tr>
-                <tr><th>Proposed Solution</th><td id="solution"></td></tr>
+                <tr id="proposedsolutionrow"><th id="proposedsolutionrowtitle">Proposed Solution</th><td id="solution"></td></tr>
+                <tr id="proposedsolutionfallbackrow"><th>Proposed Solution (EN)</th><td id="solution-fallback"></td></tr>
               </tbody>
             </table>
               <div id="citation-info">
@@ -270,6 +307,27 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
  gccChanged();
 
 
+ let USER_NAME = "User";
+ const usernameParam = urlParams.get('user');
+
+ if (usernameParam == null) {
+
+ }
+ else {
+   USER_NAME = usernameParam;
+ }
+
+
+ let CONTRACTED_LANGUAGES = null;  // if not supplied, let api determine default contracted languages
+ const contractedLanguagesParam = urlParams.get('langs');
+
+ if (contractedLanguagesParam  == null) {
+
+ }
+ else {
+   CONTRACTED_LANGUAGES = contractedLanguagesParam.split(",");
+ }
+
 
  // === Bulk row start/end range ===
 let START_ROW = parseInt(urlParams.get('start') ?? "1");   // default row 1
@@ -310,7 +368,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC})
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, requester: {firstname: USER_NAME}, contractedLanguages: contractedLanguagesParam})
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
@@ -320,15 +378,56 @@ async function submitTicket() {
     latestTimeTaken = data.timeTaken;
     window.lastTokensUsed = data.tokensUsed;
 
+    document.getElementById('language-detected').textContent = data.languageDetection.ticketLanguageDetected;
+    document.getElementById('tone-detected').textContent = data.languageDetection.ticketToneDetected;
+    document.getElementById('language-detected-solution').textContent = data.languageDetection.ticketLanguageDetectedSolution;
+    document.getElementById('tone-detected-solution').textContent = data.languageDetection.ticketToneDetectedSolution;
+
+
+
     document.getElementById('tower').textContent = data.result.predictedServiceTower;
     document.getElementById('intent').textContent = data.result.predictedIntent;
     // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
+
+
+    //var solutionLangKeys = Object.keys(data.result.proposedSolution);
+    var solutionRow = document.getElementById('proposedsolutionrow');
+    var solutionKey;
+    if (data.result.proposedSolution.length == 1) {
+       solutionRow.style.display = "none";
+       solutionKey = null;
+    }
+    // if (solutionLangKeys.length === 1) {
+    //    solutionRow.style.display = "none";
+    //    solutionKey = null;
+    // }
+    else {
+       solutionRow.style.display = "table-row";
+       //const index = solutionLangKeys.findIndex(x => x !== "EN");
+       //solutionKey = solutionLangKeys[index];
+       solutionKey = data.result.proposedSolution.findIndex(item => item.language !== "EN");
+    }
+
+    var englishKey = data.result.proposedSolution.findIndex(item => item.language == "EN");
+
+
+
+
+
+
     const solElem = document.getElementById('solution');
-    solElem.textContent = data.result.proposedSolution.length == 0
+    if (solutionKey === null) {
+      solElem.textContent = "Lang not supported - not shown";
+    }
+    else {
+      var solRowTitle = document.getElementById("proposedsolutionrowtitle");
+      solRowTitle.textContent = "Proposed Solution (" + data.result.proposedSolution[solutionKey]["language"] + ")";
+      solElem.innerHTML = data.result.proposedSolution[solutionKey]["solution"].length == 0
         ? "No knowledge articles found"
-        : data.result.proposedSolution;
+        : data.result.proposedSolution[solutionKey]["solution"];
+    }
 
     // Add hover → modal trigger
     solElem.style.cursor = "pointer";
@@ -340,12 +439,19 @@ async function submitTicket() {
         const modal = new bootstrap.Modal(document.getElementById('solutionEvaluatorModal'));
         modal.show();
     };
+    //document.getElementById('solution-fallback').textContent = data.result.proposedSolution.EN;
+    //var el = document.getElementById('solution-fallback');
+    //renderMinimal(el, el.textContent);
+    document.getElementById('solution-fallback').innerHTML = data.result.proposedSolution[englishKey]["solution"];
 
 
+    // if (data.result.ticketLanguageDetected == "EN") {
+    //      document.getElementById("proposedsolutionfallbackrow").classList.toggle("d-none");
+    // }
 
     document.getElementById('summary').textContent = data.result.summary;
 
-    let formattedCitationLinks = formatCitationLinks(data.result.proposedSolution, data.citationLinks);
+    let formattedCitationLinks = formatCitationLinks(data.originalProposedSolutionWithRefs, data.citationLinks);
     citationList = dictToHtmlList(formattedCitationLinks);
     if (Object.keys(formattedCitationLinks).length == 0) {
        document.getElementById("citation-info").innerHTML = "Citation reference links: None";
@@ -1273,6 +1379,29 @@ function generateRandomString(length) {
   }
   return result;
 }
+
+
+ function minimalMarkdown(md = '') {
+    // Escape HTML
+    md = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Basic replacements (order matters)
+    md = md
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // bold
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')             // italics
+      .replace(/`(.+?)`/g, '<code>$1</code>')           // inline code
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>') // links
+      .replace(/\n/g, '<br>'); // line breaks
+
+    return md;
+  }
+
+  function renderMinimal(el, md) {
+
+    if (!el) return;
+    el.innerHTML = minimalMarkdown(md);
+  }
+
 
 
 
