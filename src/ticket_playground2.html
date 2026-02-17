@@ -1144,6 +1144,8 @@ function toggleDiagnostics() {
       let totalPrompt = 0;
       let totalCompletion = 0;
 
+      var agenticRetrievalTokenUsage = "";
+
       for (const [step, time] of Object.entries(latestTimeTaken)) {
         const tr = document.createElement('tr');
         const tdStep = document.createElement('td');
@@ -1177,11 +1179,18 @@ function toggleDiagnostics() {
 
 
         if (tokenStep !== 'overall') {
-          const tData = tokenMap[tokenStep] || {};
-          prompt = tData.prompt ?? '-';
-          completion = tData.completion ?? '-';
-          if (!isNaN(parseInt(tData.prompt))) totalPrompt += parseInt(tData.prompt);
-          if (!isNaN(parseInt(tData.completion))) totalCompletion += parseInt(tData.completion);
+           const tData = tokenMap[tokenStep] || {};
+          if (tokenStep === "createProposedSolution") {
+             prompt = "-";
+             completion = "-";
+             agenticRetrievalTokenUsage = agenticRetrievalTokenUsage + "Prompt: " + (tData.prompt ?? '-') + " / Completion: " +  (tData.completion ?? '-');
+          }
+          else {
+            prompt = tData.prompt ?? '-';
+            completion = tData.completion ?? '-';
+            if (!isNaN(parseInt(tData.prompt))) totalPrompt += parseInt(tData.prompt);
+            if (!isNaN(parseInt(tData.completion))) totalCompletion += parseInt(tData.completion);
+          }
         }
 
         const tdPrompt = document.createElement('td');
@@ -1211,6 +1220,15 @@ function toggleDiagnostics() {
         <td colspan="3">${API_ENDPOINT}</td>
       `;
       tbody.appendChild(endpointRow);
+
+
+      const agenticRetrievalTokensRow = document.createElement('tr');
+      agenticRetrievalTokensRow.innerHTML = `
+        <td><small><small>Agentic Retrieval</small></small></td>
+        <td colspan="3"><small><small>${agenticRetrievalTokenUsage}</small></small></td>
+      `;
+      tbody.appendChild(agenticRetrievalTokensRow);
+
     }
 
     diagCard.classList.remove('d-none');
