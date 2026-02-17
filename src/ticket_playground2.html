@@ -32,6 +32,12 @@
     #star-rating .star.selected {
       color: gold;
     }
+   .thick-row {
+    outline: 2px solid #0d6efd;  /* color + thickness */
+    outline-offset: -2px;        /* nudges outline closer to cells */
+    }
+
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -85,40 +91,7 @@
         </form>
 
         <div class="card shadow-sm p-4 mt-4 d-none" id="result">
-          <h2 class="mb-4">Language Detection</h2>
-             <!--div>
-             <p>Language detected: <span id="language-detected">lang</span> </p>
-             <p>Tone detected: <span id="tone-detected">tone</span></p>
-             </div-->
-             <table class="table table-striped table-sm">
-              <!--colgroup>
-                <col style="width: 20%;">
-                <col style="width: 40%;">
-                <col style="width: 40%;">
 
-              </colgroup-->
-              <thead>
-             <tr>
-                <th scope="col"></th>
-                <th scope="col">userQuery</th>
-                <th scope="col">proposedSolution</th>
-              </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">Language Detected</th>
-                  <td><span id="language-detected">lang</span></td>
-                  <td><span id="language-detected-solution">lang</span></td>
-                </tr>
-                <tr>
-                  <th scope="row">Tone Detected</th>
-                  <td><span id="tone-detected">tone</span></td>
-                  <td><span id="tone-detected-solution">tone</span></td>
-
-
-                </tr>
-              </tbody>
-            </table>
 
 
           <h2 class="mb-4">Predictions</h2>
@@ -159,6 +132,7 @@
               </div>
 
               <div class="card mt-3 d-none" id="diagnosticsCard">
+
                 <h4 class="mb-3">API Diagnostics</h4>
                 <div class="table-responsive">
                   <table class="table table-bordered table-striped" id="diagnosticsTable">
@@ -175,6 +149,47 @@
                     </tbody>
                   </table>
                 </div>
+                <div>
+                  <br>
+                  <br>
+                  <h4 class="mb-4">Language Detection</h4>
+                       <!--div>
+                       <p>Language detected: <span id="language-detected">lang</span> </p>
+                       <p>Tone detected: <span id="tone-detected">tone</span></p>
+                       </div-->
+                       <table class="table table-striped table-sm">
+                        <!--colgroup>
+                          <col style="width: 20%;">
+                          <col style="width: 40%;">
+                          <col style="width: 40%;">
+
+                        </colgroup-->
+                        <thead>
+                       <tr>
+                          <th scope="col"></th>
+                          <th scope="col">userQuery</th>
+                          <th scope="col">proposedSolution</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">Language Detected</th>
+                            <td><span id="language-detected">lang</span></td>
+                            <td><span id="language-detected-solution">lang</span></td>
+                          </tr>
+                          <tr>
+                            <th scope="row">Tone Detected</th>
+                            <td><span id="tone-detected">tone</span></td>
+                            <td><span id="tone-detected-solution">tone</span></td>
+
+
+                          </tr>
+                        </tbody>
+                      </table>
+                  </div>
+
+
+
               </div>
           </div>
 
@@ -394,16 +409,24 @@ async function submitTicket() {
 
     //var solutionLangKeys = Object.keys(data.result.proposedSolution);
     var solutionRow = document.getElementById('proposedsolutionrow');
+    var solutionFallbackRow = document.getElementById("proposedsolutionfallbackrow");
+
     var solutionKey;
     if (data.result.proposedSolution.length == 1) {
        solutionRow.style.display = "none";
        solutionKey = null;
+       solutionRow.classList.remove("thick-row");
+       solutionFallbackRow.classList.add("thick-row");
+
     }
     // if (solutionLangKeys.length === 1) {
     //    solutionRow.style.display = "none";
     //    solutionKey = null;
     // }
     else {
+       solutionFallbackRow.classList.remove("thick-row");
+       solutionRow.classList.add("thick-row");
+
        solutionRow.style.display = "table-row";
        //const index = solutionLangKeys.findIndex(x => x !== "EN");
        //solutionKey = solutionLangKeys[index];
