@@ -368,7 +368,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, requester: {firstname: USER_NAME}, contractedLanguages: contractedLanguagesParam})
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, requester: {firstname: USER_NAME}, contractedLanguages: CONTRACTED_LANGUAGES})
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
@@ -932,7 +932,9 @@ async function processExcel() {
           shortDescription: ticket['SHORT_DESCRIPTION'],
           description: ticket['DESCRIPTION'],
           targetIndex: TARGET_INDEX,
-          gcc: GCC
+          gcc: GCC,
+          requester: {firstname: USER_NAME},
+          contractedLanguages: CONTRACTED_LANGUAGES
         };
 
         const controller = new AbortController();
@@ -965,12 +967,23 @@ async function processExcel() {
         if (!cancelRequested) {
           const data = await response.json();
 
+          var proposedSolutions = [];
+          for (let i = 0; i < data.result.proposedSolution.length; i++) {
+                console.log(data.result.proposedSolution[i]);
+                proposedSolutions.push(data.result.proposedSolution[i]["language"] + " - " + data.result.proposedSolution[i].solution)
+          }
+          if (data.result.proposedSolution.length == 1) {
+              proposedSolutions.push("");   // only 1 language result
+          }
+
           bulkResults[startIndex] = {
             ...ticket,
             GENAI_service_tower: data.result.predictedServiceTower || '',
             GENAI_intent: data.result.predictedIntent || '',
             GENAI_intent_description: data.result.predictedIntentDescription || '',
-            GENAI_proposed_solution: data.result.proposedSolution || '',
+           // GENAI_proposed_solution: data.result.proposedSolution || '',
+            GENAI_proposed_solution_1: proposedSolutions[0],
+            GENAI_proposed_solution_2: proposedSolutions[1],
             GENAI_summary: data.result.summary || '',
             GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",
             GENAI_solution_evaluation_justification: data.result.solutionEvaluator?.justification ?? ""
@@ -1122,7 +1135,10 @@ function toggleDiagnostics() {
         serviceTowerPredict: tokenData.service_tower ||  tokenData.serviceTowerPredict || {},
         intentPredict: tokenData.intent || tokenData.intentPredict ||  {},
         createTicketSummary: tokenData.ticket_summary || tokenData.createTicketSummary ||  {},
-        createProposedSolution: tokenData.proposed_solution ||  tokenData.proposedSolution || {}
+        createProposedSolution: tokenData.proposed_solution ||  tokenData.proposedSolution || {},
+        detectTicketLanguage: tokenData.language_detection || tokenData.detectTicketLanguage || {},
+        translateResponse: tokenData.solution_translate || tokenData.translateResponse || {},
+        translateResponseToFallback: tokenData.solution_translate_to_fallback || tokenData.translateResponseToFallback || {}
       };
 
       let totalPrompt = 0;
