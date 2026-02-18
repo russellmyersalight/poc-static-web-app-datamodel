@@ -346,6 +346,18 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
  }
 
 
+ let SHOW_INLINE_REFS = "Y";
+ const showInlineRefsParam = urlParams.get('inline-refs');
+
+ if (showInlineRefsParam == null) {
+
+ }
+ else {
+   SHOW_INLINE_REFS = showInlineRefsParam;
+ }
+
+
+
  // === Bulk row start/end range ===
 let START_ROW = parseInt(urlParams.get('start') ?? "1");   // default row 1
 let END_ROW = parseInt(urlParams.get('end') ?? "-1");      // -1 means last row
@@ -385,7 +397,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, requester: {firstname: USER_NAME}, contractedLanguages: CONTRACTED_LANGUAGES})
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, requester: {firstname: USER_NAME}, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
@@ -482,7 +494,7 @@ async function submitTicket() {
     var summaryFallbackRow = document.getElementById("summaryfallbackrow");
 
     var summaryKey;
-    if (data.result.summary.length == 1) {
+    if (data.result.summaryLanguageArray.length == 1) {
        summaryRow.style.display = "none";
        summaryKey = null;
        //summaryRow.classList.remove("thick-row");
@@ -496,21 +508,21 @@ async function submitTicket() {
        summaryRow.style.display = "table-row";
        //const index = solutionLangKeys.findIndex(x => x !== "EN");
        //solutionKey = solutionLangKeys[index];
-       summaryKey = data.result.summary.findIndex(item => item.language !== "EN");
+       summaryKey = data.result.summaryLanguageArray.findIndex(item => item.language !== "EN");
     }
 
-    var englishSummaryKey = data.result.summary.findIndex(item => item.language == "EN");
+    var englishSummaryKey = data.result.summaryLanguageArray.findIndex(item => item.language == "EN");
 
     if (summaryKey === null) {
 
     }
     else {
       var summaryRowTitle = document.getElementById("summaryrowtitle");
-      summaryRowTitle.textContent = "Summary (" + data.result.summary[summaryKey]["language"] + ")";
+      summaryRowTitle.textContent = "Summary (" + data.result.summaryLanguageArray[summaryKey]["language"] + ")";
 
-      document.getElementById('summary').innerHTML = data.result.summary[summaryKey]["summary"];
+      document.getElementById('summary').innerHTML = data.result.summaryLanguageArray[summaryKey]["summary"];
     }
-    document.getElementById('summary-fallback').innerHTML = data.result.summary[englishSummaryKey]["summary"];
+    document.getElementById('summary-fallback').innerHTML = data.result.summaryLanguageArray[englishSummaryKey]["summary"];
 
 
 
@@ -999,7 +1011,8 @@ async function processExcel() {
           targetIndex: TARGET_INDEX,
           gcc: GCC,
           requester: {firstname: USER_NAME},
-          contractedLanguages: CONTRACTED_LANGUAGES
+          contractedLanguages: CONTRACTED_LANGUAGES,
+          showInlineRefs: SHOW_INLINE_REFS
         };
 
         const controller = new AbortController();
