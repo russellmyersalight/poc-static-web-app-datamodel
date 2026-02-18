@@ -101,9 +101,11 @@
                 <tr><th>Service Tower</th><td class="text-primary" id="tower"></td></tr>
                 <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
                 <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
-                <tr><th>Summary</th><td id="summary"></td></tr>
                 <tr id="proposedsolutionrow"><th id="proposedsolutionrowtitle">Proposed Solution</th><td id="solution"></td></tr>
                 <tr id="proposedsolutionfallbackrow"><th>Proposed Solution (EN)</th><td id="solution-fallback"></td></tr>
+                <tr id="summaryrow"><th id="summaryrowtitle">Summary</th><td id="summary"></td></tr>
+                <tr id="summaryfallbackrow"><th>Summary (EN)</th><td id="summary-fallback"></td></tr>
+
               </tbody>
             </table>
               <div id="citation-info">
@@ -472,7 +474,44 @@ async function submitTicket() {
     //      document.getElementById("proposedsolutionfallbackrow").classList.toggle("d-none");
     // }
 
-    document.getElementById('summary').textContent = data.result.summary;
+   // document.getElementById('summary').textContent = data.result.summary;
+
+      //var solutionLangKeys = Object.keys(data.result.proposedSolution);
+
+    var summaryRow = document.getElementById('summaryrow');
+    var summaryFallbackRow = document.getElementById("summaryfallbackrow");
+
+    var summaryKey;
+    if (data.result.summary.length == 1) {
+       summaryRow.style.display = "none";
+       summaryKey = null;
+       //summaryRow.classList.remove("thick-row");
+       //summaryFallbackRow.classList.add("thick-row");
+
+    }
+    else {
+       //summaryFallbackRow.classList.remove("thick-row");
+       //summaryRow.classList.add("thick-row");
+
+       summaryRow.style.display = "table-row";
+       //const index = solutionLangKeys.findIndex(x => x !== "EN");
+       //solutionKey = solutionLangKeys[index];
+       summaryKey = data.result.summary.findIndex(item => item.language !== "EN");
+    }
+
+    var englishSummaryKey = data.result.summary.findIndex(item => item.language == "EN");
+
+    if (summaryKey === null) {
+
+    }
+    else {
+      document.getElementById('summary').innerHTML = data.result.summary[summaryKey]["summary"];
+    }
+    document.getElementById('summary-fallback').innerHTML = data.result.summary[englishSummaryKey]["summary"];
+
+
+
+
 
     let formattedCitationLinks = formatCitationLinks(data.originalProposedSolutionWithRefs, data.citationLinks);
     citationList = dictToHtmlList(formattedCitationLinks);
