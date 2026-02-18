@@ -505,6 +505,9 @@ async function submitTicket() {
 
     }
     else {
+      var summaryRowTitle = document.getElementById("summaryrowtitle");
+      summaryRowTitle.textContent = "Summary (" + data.result.summary[summaryKey]["language"] + ")";
+
       document.getElementById('summary').innerHTML = data.result.summary[summaryKey]["summary"];
     }
     document.getElementById('summary-fallback').innerHTML = data.result.summary[englishSummaryKey]["summary"];
