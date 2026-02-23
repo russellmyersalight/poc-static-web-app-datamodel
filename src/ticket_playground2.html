@@ -335,6 +335,16 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
    LCC = lccParam;
  }
 
+let TONE = null;
+
+ const toneParam = urlParams.get('tone');
+
+ if (toneParam == null) {
+
+ }
+ else {
+   TONE = toneParam;
+ }
 
 
 
@@ -411,7 +421,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC,  lcc: LCC, requester: {firstname: USER_NAME}, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC,  lcc: LCC, requester: {firstname: USER_NAME}, formality: TONE, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
