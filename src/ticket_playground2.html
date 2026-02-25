@@ -111,6 +111,18 @@
               <div id="citation-info">
                    Citation links: ...
               </div>
+              <!--div class="form-check mt-2" id="inlineRefsToggleContainer">
+                <input class="form-check-input" type="checkbox" id="inlineRefsToggle">
+                <label class="form-check-label" for="inlineRefsToggle">
+                  Show inline refs
+                </label>
+              </div-->
+              <div class="form-check form-switch mt-3 d-none" id="inlineRefsToggleContainer">
+                <input class="form-check-input" type="checkbox" role="switch" id="inlineRefsToggle">
+                <label class="form-check-label fw-semibold ms-2" for="inlineRefsToggle">
+                  Show inline ref ids
+                </label>
+              </div>
               <div id="feedback-section" class="text-center mt-3 d-none">
                 <span>Was this information helpful?</span><br>
                 <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(true)">👍</button>
@@ -490,7 +502,7 @@ async function submitTicket() {
 
 
 
-
+    let inlineToggle = document.getElementById("inlineRefsToggle");
 
     const solElem = document.getElementById('solution');
     if (solutionKey === null) {
@@ -499,9 +511,19 @@ async function submitTicket() {
     else {
       var solRowTitle = document.getElementById("proposedsolutionrowtitle");
       solRowTitle.textContent = "Proposed Solution (" + data.result.proposedSolution[solutionKey]["language"] + ")";
-      solElem.innerHTML = data.result.proposedSolution[solutionKey]["solution"].length == 0
-        ? "N/A"
-        : data.result.proposedSolution[solutionKey]["solution"];
+
+      const rawSolution = data.result.proposedSolution[solutionKey]["solution"];
+      window.currentRawSolution = rawSolution; // store globally
+
+
+
+      solElem.innerHTML = rawSolution.length == 0
+        ? "-- No solution found --"
+        : (inlineToggle.checked ? rawSolution : stripInlineRefs(rawSolution));
+
+      // solElem.innerHTML = data.result.proposedSolution[solutionKey]["solution"].length == 0
+      //   ? "N/A"
+      //   : data.result.proposedSolution[solutionKey]["solution"];
     }
 
     // Add hover → modal trigger
@@ -517,9 +539,13 @@ async function submitTicket() {
     //document.getElementById('solution-fallback').textContent = data.result.proposedSolution.EN;
     //var el = document.getElementById('solution-fallback');
     //renderMinimal(el, el.textContent);
+
+     const rawFallbackSolution = data.result.proposedSolution[englishKey]["solution"];
+     window.currentRawFallbackSolution = rawFallbackSolution; // store globally
+
     document.getElementById('solution-fallback').innerHTML =  data.result.proposedSolution[englishKey]["solution"].length == 0
-       ? "N/A"
-       : data.result.proposedSolution[englishKey]["solution"];
+       ? "-- No solution found --"
+       : (inlineToggle.checked ? rawFallbackSolution : stripInlineRefs(rawFallbackSolution));
 
 
     // if (data.result.ticketLanguageDetected == "EN") {
@@ -576,6 +602,14 @@ async function submitTicket() {
     else {
       document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
     }
+
+        // Show inline refs toggle (default off)
+    const inlineToggleContainer = document.getElementById("inlineRefsToggleContainer");
+    inlineToggle = document.getElementById("inlineRefsToggle");
+
+    inlineToggle.checked = false;
+    inlineToggleContainer.classList.remove("d-none");
+
 
     const ticketToken = generateRandomString(16); // Generates a 16-character token
     console.log(ticketToken);
@@ -1555,7 +1589,10 @@ function generateRandomString(length) {
     el.innerHTML = minimalMarkdown(md);
   }
 
-
+  function stripInlineRefs(text) {
+  if (!text) return text;
+  return text.replace(/\[ref_id:\d+\]/g, '');
+}
 
 
 
@@ -1577,6 +1614,24 @@ function generateRandomString(length) {
     .catch(error => {
       console.error('Error loading config:', error);
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const inlineToggle = document.getElementById("inlineRefsToggle");
+        const solElem = document.getElementById("solution");
+        const fallbackSolElem =  document.getElementById("solution-fallback");
+
+        inlineToggle.addEventListener("change", function () {
+          if (!window.currentRawFallbackSolution) return;
+
+          if (inlineToggle.checked) {
+            solElem.innerHTML = window.currentRawSolution;
+            fallbackSolElem.innerHTML = window.currentRawFallbackSolution;
+          } else {
+            solElem.innerHTML = stripInlineRefs(window.currentRawSolution);
+            fallbackSolElem.innerHTML = stripInlineRefs(window.currentRawFallbackSolution);
+          }
+    });
+});
 
 </script>
 </body>
