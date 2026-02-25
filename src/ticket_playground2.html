@@ -500,7 +500,7 @@ async function submitTicket() {
       var solRowTitle = document.getElementById("proposedsolutionrowtitle");
       solRowTitle.textContent = "Proposed Solution (" + data.result.proposedSolution[solutionKey]["language"] + ")";
       solElem.innerHTML = data.result.proposedSolution[solutionKey]["solution"].length == 0
-        ? "No knowledge articles found"
+        ? "N/A"
         : data.result.proposedSolution[solutionKey]["solution"];
     }
 
@@ -517,7 +517,9 @@ async function submitTicket() {
     //document.getElementById('solution-fallback').textContent = data.result.proposedSolution.EN;
     //var el = document.getElementById('solution-fallback');
     //renderMinimal(el, el.textContent);
-    document.getElementById('solution-fallback').innerHTML = data.result.proposedSolution[englishKey]["solution"];
+    document.getElementById('solution-fallback').innerHTML =  data.result.proposedSolution[englishKey]["solution"].length == 0
+       ? "N/A"
+       : data.result.proposedSolution[englishKey]["solution"];
 
 
     // if (data.result.ticketLanguageDetected == "EN") {
