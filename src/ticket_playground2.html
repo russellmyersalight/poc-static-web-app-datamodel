@@ -429,11 +429,33 @@ async function submitTicket() {
   const shortDesc = document.getElementById('shortDesc').value;
   const longDesc = document.getElementById('longDesc').value;
 
+  var submitPayload = {
+     shortDescription: shortDesc,
+      description: longDesc,
+      targetIndex: TARGET_INDEX,
+      gcc: GCC,
+      lcc: LCC,
+      requester: {firstname: USER_NAME},
+  }
+  if (TONE != null) {
+    submitPayload.formality = TONE;
+  }
+   if (CONTRACTED_LANGUAGES != null) {
+      submitPayload.contractedLangues = CONTRACTED_LANGUAGES;
+  }
+    if (SHOW_INLINE_REFS != null) {
+      submitPayload.showInlineRefs = SHOW_INLINE_REFS;
+  }
+
+  var submitPayloadString = JSON.stringify(submitPayload);
+
+
   try {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC,  lcc: LCC, requester: {firstname: USER_NAME}, formality: TONE, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
+      body:  submitPayloadString
+      //body:  JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC,  lcc: LCC, requester: {firstname: USER_NAME}, formality: TONE, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
@@ -1078,16 +1100,29 @@ async function processExcel() {
       const ticket = tickets[startIndex];
       if (!ticket) return;
 
+
       try {
-        const payload = {
+        var payload = {
           shortDescription: ticket['SHORT_DESCRIPTION'],
           description: ticket['DESCRIPTION'],
           targetIndex: TARGET_INDEX,
           gcc: GCC,
-          requester: {firstname: USER_NAME},
-          contractedLanguages: CONTRACTED_LANGUAGES,
-          showInlineRefs: SHOW_INLINE_REFS
+          lcc: LCC,
+          requester: {firstname: USER_NAME}
         };
+
+        if (TONE != null) {
+          payload.formality = TONE;
+        }
+         if (CONTRACTED_LANGUAGES != null) {
+            payload.contractedLangues = CONTRACTED_LANGUAGES;
+        }
+          if (SHOW_INLINE_REFS != null) {
+            payload.showInlineRefs = SHOW_INLINE_REFS;
+        }
+
+
+
 
         const controller = new AbortController();
         const signal = controller.signal;
@@ -1122,7 +1157,8 @@ async function processExcel() {
           var proposedSolutions = [];
           for (let i = 0; i < data.result.proposedSolution.length; i++) {
                 console.log(data.result.proposedSolution[i]);
-                proposedSolutions.push(data.result.proposedSolution[i]["language"] + " - " + data.result.proposedSolution[i].solution)
+                // proposedSolutions.push(data.result.proposedSolution[i]["language"] + " - " + data.result.proposedSolution[i].solution)
+                 proposedSolutions.push(data.result.proposedSolution[i].solution)
           }
           if (data.result.proposedSolution.length == 1) {
               proposedSolutions.push("");   // only 1 language result
@@ -1134,8 +1170,9 @@ async function processExcel() {
             GENAI_intent: data.result.predictedIntent || '',
             GENAI_intent_description: data.result.predictedIntentDescription || '',
            // GENAI_proposed_solution: data.result.proposedSolution || '',
-            GENAI_proposed_solution_1: proposedSolutions[0],
-            GENAI_proposed_solution_2: proposedSolutions[1],
+            GENAI_detected_ticket_language: data.result.detectedLanguage,
+            GENAI_proposed_solution: proposedSolutions[0],
+            GENAI_proposed_solution_EN: proposedSolutions[1],
             GENAI_summary: data.result.summary || '',
             GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",
             GENAI_solution_evaluation_justification: data.result.solutionEvaluator?.justification ?? ""
