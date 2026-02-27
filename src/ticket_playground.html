@@ -269,6 +269,19 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
 
  gccChanged();
 
+ let LCC = "NL001";
+
+ const lccParam = urlParams.get('lcc');
+
+ if (lccParam == null) {
+
+ }
+ else {
+   LCC = lccParam;
+ }
+
+
+
 
 
  // === Bulk row start/end range ===
@@ -310,7 +323,7 @@ async function submitTicket() {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC})
+      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, lcc: LCC})
     });
     const data = await response.json();
     // Store evaluator dictionary for modal display
