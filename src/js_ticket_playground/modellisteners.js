@@ -66,3 +66,11 @@ function gccChanged() {
   displayGcc();
 
 }
+
+function lccChanged() {
+  displayLcc();
+}
+
+function userChanged() {
+  displayUser();
+}

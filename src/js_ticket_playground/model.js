@@ -83,7 +83,7 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
  gccChanged();
 
 
- let LCC = null;
+ let LCC = "NL001";
 
  const lccParam = urlParams.get('lcc');
 
@@ -93,6 +93,8 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
  else {
    LCC = lccParam;
  }
+
+ lccChanged();
 
 let TONE = null;
 
@@ -107,7 +109,7 @@ let TONE = null;
 
 
 
- let USER_NAME = "User";
+ let USER_NAME = "Annie";
  const usernameParam = urlParams.get('user');
 
  if (usernameParam == null) {
@@ -116,6 +118,8 @@ let TONE = null;
  else {
    USER_NAME = usernameParam;
  }
+
+ userChanged();
 
 
  let CONTRACTED_LANGUAGES = null;  // if not supplied, let api determine default contracted languages

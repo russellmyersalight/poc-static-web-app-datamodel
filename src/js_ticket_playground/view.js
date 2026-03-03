@@ -35,6 +35,18 @@ function displayGcc() {
 
 }
 
+function displayLcc() {
+   document.getElementById("lccText").innerHTML = " LCC: " + LCC;
+
+}
+
+function displayUser() {
+   document.getElementById("userText").innerHTML = " User: " + USER_NAME;
+
+}
+
+
+
 
 function showFeedbackButtons() {
   const feedbackSection = document.getElementById('feedback-section');
