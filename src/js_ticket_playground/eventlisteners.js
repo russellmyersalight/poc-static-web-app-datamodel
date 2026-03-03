@@ -58,6 +58,7 @@ async function submitTicket() {
 
     // Store timeTaken globally for diagnostics
     latestTimeTaken = data.timeTaken;
+    latestTimeTaken.languageTranslationFallback = "";
     window.lastTokensUsed = data.tokensUsed;
 
     try {

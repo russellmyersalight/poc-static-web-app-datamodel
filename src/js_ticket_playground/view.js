@@ -46,6 +46,18 @@ function displayUser() {
 }
 
 
+function setupLanguageDetectionDiv() {
+    const langDetectionDiv = document.getElementById("language-detection-div");
+    if (TARGET_LANG === "csharp")   {
+      langDetectionDiv.classList.add('d-none');  // No language detection diagnostics available for C#
+    }
+    else {
+       langDetectionDiv.classList.remove('d-none'); //  Language detection diagnostics available for Python
+    }
+
+}
+
+
 
 
 function showFeedbackButtons() {
@@ -131,8 +143,8 @@ function toggleDiagnostics() {
         intentPredict: tokenData.intent || tokenData.intentPredict ||  {},
         createTicketSummary: tokenData.ticket_summary || tokenData.createTicketSummary ||  {},
         createProposedSolution: tokenData.proposed_solution ||  tokenData.proposedSolution || {},
-        detectTicketLanguage: tokenData.language_detection || tokenData.detectTicketLanguage || {},
-        translateResponse: tokenData.solution_translate || tokenData.translateResponse || {},
+        detectTicketLanguage: tokenData.language_detection || tokenData.detectTicketLanguage || tokenData.detectLanguage || {},
+        translateResponse: tokenData.solution_translate || tokenData.translateResponse || tokenData.translateLanguage || {},
         translateResponseToFallback: tokenData.solution_translate_to_fallback || tokenData.translateResponseToFallback || {}
       };
 
@@ -167,6 +179,16 @@ function toggleDiagnostics() {
           case 'proposeSolution':
             tokenStep = "createProposedSolution";
             break;
+          case 'languageDetection':
+             tokenStep = "detectTicketLanguage";
+              break;
+           case 'languageTranslation':
+             tokenStep = "translateResponse";
+             break;
+          case 'languageTranslationFallback':
+             tokenStep = "translateResponseToFallback";
+             break;
+
           default:
             tokenStep = step;
 

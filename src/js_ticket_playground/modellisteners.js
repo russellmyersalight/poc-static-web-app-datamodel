@@ -58,6 +58,7 @@ function targetLangChanged() {
 
   displayLang();
   displayEndpoint();
+  setupLanguageDetectionDiv();
 
 }
 
