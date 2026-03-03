@@ -23,7 +23,7 @@ function targetLangOrEnvChanged() {
       }
       else {
            API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
-           API_ENDPOINT_EXTRA = "==gewZ1wuFzABZKuyz_K9LFe29NXjaJR4x689iCs_Ab2N0B5_qyJX7nn=edoc?".split('').reverse().join('');  // QAS
+           API_ENDPOINT_EXTRA = "==AYfzfMuFzAwFRr_aShvZJv8FSrHED-nzV8QdjoiIBz7AZk_cDQpW1z=edoc?".split('').reverse().join('');  // QAS
            API_ENDPOINT_FEEDBACK = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict/feedback';  //QAS
       }
       CUSTOMER_CODE = "ZCS";

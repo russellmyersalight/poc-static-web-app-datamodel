@@ -6,47 +6,57 @@
   <title>AI Ticket Prediction Playground</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
     body {
       font-family: Arial, sans-serif;
       margin-top: 2em;
       background-color: #f8f9fa;
     }
+
     .thinking-icon {
       font-size: 2rem;
       animation: pulse 1s infinite ease-in-out;
       margin-top: 10px;
       text-align: center;
     }
+
     @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.8; }
-      100% { transform: scale(1); opacity: 1; }
+      0%   { transform: scale(1);   opacity: 1; }
+      50%  { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(1);   opacity: 1; }
     }
-    img.pulsate { width: 100px; animation: pulse 2s infinite; }
+
+    img.pulsate {
+      width: 100px;
+      animation: pulse 2s infinite;
+    }
+
     #star-rating .star {
       cursor: pointer;
       transition: color 0.2s;
     }
+
     #star-rating .star.hover,
     #star-rating .star.selected {
       color: gold;
     }
+
+    .thick-row {
+      outline: 2px solid #0d6efd;  /* color + thickness */
+      outline-offset: -2px;        /* nudges outline closer to cells */
+    }
   </style>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
+
 <body>
 <div class="container">
 
   <div class="text-center mb-5">
     <h1 class="display-5">AI Ticket Classification Playground</h1>
-    <small><small class="text-muted" id="app-version">Version ...</small></small>
-    &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small>
-      <small><small><small id="langText">python</small></small></small>
-      <small><small><small id="endpointText"></small></small></small>
-      <span>&nbsp;&nbsp;&nbsp;</SPAN>
-      <small><small><small id="gccText"></small></small></small>
-
+    <small><small class="text-muted" id="app-version">Version ...</small></small> &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small> <small><small><small id="langText">python</small></small></small> <small><small><small id="endpointText"></small></small></small> <span>&nbsp;&nbsp;&nbsp;</SPAN>  <small><small><small id="gccText"></small></small></small>
   </div>
 
   <!-- Tabs -->
@@ -70,7 +80,7 @@
             <label for="shortDesc" class="form-label">Short Description</label>
             <input type="text" class="form-control" id="shortDesc" placeholder="Enter short description" required>
           </div>
-           <div class="mb-3">
+          <div class="mb-3">
             <label for="longDesc" class="form-label">Long Description</label>
             <textarea class="form-control" id="longDesc" rows="5" placeholder="Enter long description" required
                       onkeydown="handleEnterSubmit(event)"></textarea>
@@ -85,63 +95,102 @@
         </form>
 
         <div class="card shadow-sm p-4 mt-4 d-none" id="result">
+
           <h2 class="mb-4">Predictions</h2>
-            <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-              <tbody>
-                <tr><th>Service Tower</th><td class="text-primary" id="tower"></td></tr>
-                <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
-                <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
-                <tr><th>Summary</th><td id="summary"></td></tr>
-                <tr><th>Proposed Solution</th><td id="solution"></td></tr>
-              </tbody>
-            </table>
+          <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <tbody>
+                  <tr><th>Service Tower</th><td class="text-primary" id="tower"></td></tr>
+                  <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
+                  <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
+                  <tr id="proposedsolutionrow"><th id="proposedsolutionrowtitle">Proposed Solution</th><td id="solution"></td></tr>
+                  <tr id="proposedsolutionfallbackrow"><th>Proposed Solution (EN)</th><td id="solution-fallback"></td></tr>
+                  <tr id="summaryrow"><th id="summaryrowtitle">Summary</th><td id="summary"></td></tr>
+                  <tr id="summaryfallbackrow"><th>Summary (EN)</th><td id="summary-fallback"></td></tr>
+
+                </tbody>
+              </table>
               <div id="citation-info">
-                   Citation links: ...
+                     Citation links: ...
+              </div>
+
+              <div class="form-check form-switch mt-3 d-none" id="inlineRefsToggleContainer">
+                  <input class="form-check-input" type="checkbox" role="switch" id="inlineRefsToggle">
+                  <label class="form-check-label fw-semibold ms-2" for="inlineRefsToggle">
+                    Show inline ref ids
+                  </label>
               </div>
               <div id="feedback-section" class="text-center mt-3 d-none">
-                <span>Was this information helpful?</span><br>
-                <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(true)">👍</button>
-                <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(false)">👎</button>
+                  <span>Was this information helpful?</span><br>
+                  <button id="feedback-up" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(true)">👍</button>
+                  <button id="feedback-down" class="btn btn-outline-secondary btn-sm mx-1" onclick="submitFeedbackJson(false)">👎</button>
 
-                <div class="mt-2">
-                  <span>Rate this solution:</span><br>
-                  <div id="star-rating" style="font-size: 1.5rem;">
-                    <span class="star" data-value="1">☆</span>
-                    <span class="star" data-value="2">☆</span>
-                    <span class="star" data-value="3">☆</span>
-                    <span class="star" data-value="4">☆</span>
-                    <span class="star" data-value="5">☆</span>
-                  </div>
-                </div>
+                  <div class="mt-2">
+                    <span>Rate this solution:</span><br>
+                    <div id="star-rating" style="font-size: 1.5rem;">
+                      <span class="star" data-value="1">☆</span>
+                      <span class="star" data-value="2">☆</span>
+                      <span class="star" data-value="3">☆</span>
+                      <span class="star" data-value="4">☆</span>
+                      <span class="star" data-value="5">☆</span>
+                    </div>
+              </div>
 
-                <div id="feedback-msg" class="mt-2 text-muted"></div>
+              <div id="feedback-msg" class="mt-2 text-muted"></div>
               </div>
               <div class="text-center mt-3">
-                <button id="showDiagnosticsBtn" class="btn btn-info d-none" onclick="toggleDiagnostics()">Show Diagnostics</button>
-              </div>
+                  <button id="showDiagnosticsBtn" class="btn btn-info d-none" onclick="toggleDiagnostics()">Show Diagnostics</button>
+             </div>
 
-              <div class="card mt-3 d-none" id="diagnosticsCard">
-                <h4 class="mb-3">API Diagnostics</h4>
-                <div class="table-responsive">
-                  <table class="table table-bordered table-striped" id="diagnosticsTable">
-                   <thead>
-                      <tr>
-                        <th>Step</th>
-                        <th>Time Taken (s)</th>
-                        <th>Prompt Tokens</th>
-                        <th>Completion Tokens</th>
-                      </tr>
-                   </thead>
-                    <tbody>
-                      <!-- Dynamically populated -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+             <div class="card mt-3 d-none" id="diagnosticsCard">
+
+                  <h4 class="mb-3">API Diagnostics</h4>
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="diagnosticsTable">
+                     <thead>
+                        <tr>
+                          <th>Step</th>
+                          <th>Time Taken (s)</th>
+                          <th>Prompt Tokens</th>
+                          <th>Completion Tokens</th>
+                        </tr>
+                     </thead>
+                      <tbody>
+                        <!-- Dynamically populated -->
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <br>
+                    <br>
+                    <h4 class="mb-4">Language Detection</h4>
+                         <table class="table table-striped table-sm">
+                          <thead>
+                         <tr>
+                            <th scope="col"></th>
+                            <th scope="col">userQuery</th>
+                            <th scope="col">proposedSolution</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <th scope="row">Language Detected</th>
+                              <td><span id="language-detected">lang</span></td>
+                              <td><span id="language-detected-solution">lang</span></td>
+                            </tr>
+                            <tr>
+                              <th scope="row">Tone Detected</th>
+                              <td><span id="tone-detected">tone</span></td>
+                              <td><span id="tone-detected-solution">tone</span></td>
+
+
+                            </tr>
+                          </tbody>
+                        </table>
+                  </div>
+             </div>
+            </div>
           </div>
-
-        </div>
       </div>
     </div>
 
@@ -170,6 +219,8 @@
       </div>
 </div>
 
+</div>
+
  <!-- Modal: Solution Evaluator -->
 <div class="modal fade" id="solutionEvaluatorModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -186,1129 +237,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-
-let ticketToken = null;
-let feedbackData = null;
-
-let latestTimeTaken = null;
-
-let cancelRequested = false;
-
-// let API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
-// let API_ENDPOINT = "http://localhost:7075/api/predict"; // C# local
-let API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
-
-let API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
-
-let API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback";
-
-let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
-
- const queryString = window.location.search;
- const urlParams = new URLSearchParams(queryString);
-
- let CONCURRENCY_LIMIT = 1;
- const concurrencyLimitParam = urlParams.get('concurrency');
-
- if (concurrencyLimitParam == null) {
-
- }
- else {
-   CONCURRENCY_LIMIT = parseInt(concurrencyLimitParam);
- }
-
- let TARGET_INDEX = "ticket-qanda-simple";
- const targetIndexParam = urlParams.get('index');
-
- if (targetIndexParam == null) {
-
- }
- else {
-   TARGET_INDEX = targetIndexParam;
- }
-
-
- let TARGET_ENV = 'q';
- let TARGET_LANG = "csharp";
-
- const targetEnvParam = urlParams.get('env');
-
- if (targetEnvParam == null) {
-
- }
- else {
-   TARGET_ENV = targetEnvParam;
- }
-
- targetEnvChanged();
-
-
- const targetLangParam = urlParams.get('target');
-
- if (targetLangParam == null) {
-
- }
- else {
-   TARGET_LANG = targetLangParam;
- }
-
- targetLangChanged();
-
- let GCC = "JUM";
-
- const gccParam = urlParams.get('gcc');
-
- if (gccParam == null) {
-
- }
- else {
-   GCC = gccParam;
- }
-
- gccChanged();
-
- let LCC = "NL001";
-
- const lccParam = urlParams.get('lcc');
-
- if (lccParam == null) {
-
- }
- else {
-   LCC = lccParam;
- }
-
-
-
-
-
- // === Bulk row start/end range ===
-let START_ROW = parseInt(urlParams.get('start') ?? "1");   // default row 1
-let END_ROW = parseInt(urlParams.get('end') ?? "-1");      // -1 means last row
-
-
-
-async function testProxy() {
-   const res = await fetch(`/api/proxy/api/predict?tstparam=blah`, {
-    method: 'GET',
-    headers: { 'Accept': 'application/json' }
-  });
-  if (!res.ok)  console.log("proxy call res is not ok");  //throw new Error(`Proxy failed: ${res.status}`);
-  console.log("result of proxy call:")
-  console.log(res.json());
-
-}
-
-async function submitTicket() {
-  ticketToken = null;
-  feedbackdata = null;
-
-  const loader = document.getElementById('myImage');
-  const resultBox = document.getElementById('result');
-  const submitBtn = document.getElementById('singleSubmitBtn');
-
-  // Disable the submit button
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Processing...";
-
-  loader.classList.remove('d-none');
-  resultBox.classList.add('d-none');
-
-  const shortDesc = document.getElementById('shortDesc').value;
-  const longDesc = document.getElementById('longDesc').value;
-
-  try {
-    const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC, lcc: LCC})
-    });
-    const data = await response.json();
-    // Store evaluator dictionary for modal display
-    window.solutionEvaluator = data.result.solutionEvaluator || {};
-
-    // Store timeTaken globally for diagnostics
-    latestTimeTaken = data.timeTaken;
-    window.lastTokensUsed = data.tokensUsed;
-
-    document.getElementById('tower').textContent = data.result.predictedServiceTower;
-    document.getElementById('intent').textContent = data.result.predictedIntent;
-    // if (data.result.predictedIntentDescription === 'Missing description')
-    document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
-    //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
-    const solElem = document.getElementById('solution');
-    solElem.textContent = data.result.proposedSolution.length == 0
-        ? "No knowledge articles found"
-        : data.result.proposedSolution;
-
-    // Add hover → modal trigger
-    solElem.style.cursor = "pointer";
-    solElem.title = "Click to view solution evaluator details";
-    solElem.onclick = () => {
-        document.getElementById('solutionEvaluatorJson').textContent =
-            JSON.stringify(window.solutionEvaluator, null, 2);
-
-        const modal = new bootstrap.Modal(document.getElementById('solutionEvaluatorModal'));
-        modal.show();
-    };
-
-
-
-    document.getElementById('summary').textContent = data.result.summary;
-
-    let formattedCitationLinks = formatCitationLinks(data.result.proposedSolution, data.citationLinks);
-    citationList = dictToHtmlList(formattedCitationLinks);
-    if (Object.keys(formattedCitationLinks).length == 0) {
-       document.getElementById("citation-info").innerHTML = "Citation reference links: None";
-    }
-    else {
-      document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
-    }
-
-    const ticketToken = generateRandomString(16); // Generates a 16-character token
-    console.log(ticketToken);
-
-    feedbackData = prepareJsonFeedback(data, ticketToken);
-    await callFeedbackEndpoint();  // Log results (even before feedback  - as user may not enter feeedback)
-
-
-    showFeedbackButtons();
-
-    loader.classList.add('d-none');
-    resultBox.classList.remove('d-none');
-
-    // Show toggle button and hide diagnostics table initially
-    const diagBtn = document.getElementById('showDiagnosticsBtn');
-    diagBtn.classList.remove('d-none');
-    diagBtn.textContent = 'Show Diagnostics';
-    document.getElementById('diagnosticsCard').classList.add('d-none');
-
-  } catch (error) {
-    console.error('Error fetching prediction:', error);
-    alert("An error occurred. Please try again.");
-    loader.classList.add('d-none');
-  } finally {
-    // Re-enable the submit button
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Submit";
-  }
-}
-
-function prepareJsonFeedback(data, randId, isHelpful=null, feedbackText="") {
-    var j =  {};
-
-    if (TARGET_LANG == "python") {
-      // j.id = randId;
-      if ('ticketId' in data.query) {
-        if ((data.query.ticketId != null) && (data.query.ticketId != "")) {
-          j.ticketId = data.query.ticketId  + " - " + randId;
-        }
-        else {
-          j.ticketId = randId;
-        }
-      }
-      else {
-        j.ticketId = randId;
-      }
-      j.shortDescription = data.query.shortDescription;
-      j.description = data.query.description;
-      j.predictedServiceTower =data.result.predictedServiceTower;
-      j.predictedIntent = data.result.predictedIntent;
-      j.predictedIntentDescription = data.result.predictedIntentDescription;
-      j.summary = data.result.summary;
-      j.proposedSolution = data.result.proposedSolution;
-      j.method = data.agentsMethod.method;
-      j.model = data.agentsMethod.model;
-      j.apiVersion = data.apiVersion;
-      j.status = data.status;
-      j.isHelpful = isHelpful;
-      j.feedback = feedbackText;
-      const now = new Date();
-      j.createdAt = now.toISOString();
-      j.sourceEnv = TARGET_ENV;
-    }
-    else {
-      let deepCopyData = structuredClone(data);
-      if ('ticketId' in deepCopyData.query) {
-        if ((deepCopyData.query.ticketId != null) && (deepCopyData.query.ticketId != "")) {
-          deepCopyData.query.ticketId =  deepCopyData.query.ticketId  +  " - " + randId;
-        }
-        else {
-          deepCopyData.query.ticketId = randId;
-        }
-      }
-      else {
-        deepCopyData.query.ticketId = randId;
-      }
-
-      j = {
-        "prediction": deepCopyData,
-        "isHelpful": true,
-        "feedback": "",
-        "customerCode": CUSTOMER_CODE
-      }
-    }
-
-
-    return j;
-}
-
-function formatCitationLinks(proposedSolution, citationLinks) {
-
-      if (citationLinks == null) {
-        return {};
-      }
-
-      let usedRefIds = [...proposedSolution.matchAll(/\[ref_id:(\d+)\]/g)]
-                .map(m => Number(m[1]));  // extract and convert the capturing group
-      usedRefIds =  usedRefIds.sort((a, b) => a - b);
-
-      var fullReferences = {};
-
-      citationLinks.forEach((link, index) => {
-          var refId;
-          if (link.refId) {
-             refId = link.refId;
-          }
-          else {
-             refId = link.refid;
-          }
-          if (usedRefIds.includes(parseInt(refId))) {
-
-            if (link.url in fullReferences) {
-               fullReferences[link.url].push(refId);
-            }
-            else {
-              fullReferences[link.url] = [refId];
-            }
-            var xx = 1;
-
-          }
-
-      });
-
-      const entries = Object.entries(fullReferences);
-      // Map over the entries to swap key and value
-      const swappedEntries = entries.map(([key, value]) => [value, key]);
-      // Convert the swapped entries back into an object
-      const fullReferencesSwapped = Object.fromEntries(swappedEntries);
-
-
-      return fullReferencesSwapped;
-}
-
-function dictToHtmlList(dict) {
-  let html = "<ul>\n";
-
-  for (const [key, value] of Object.entries(dict)) {
-    html += `  <li><strong>${key}</strong>: <small>${value}</small></li>\n`;
-  }
-
-  html += "</ul>";
-  return html;
-}
-
-function showFeedbackButtons() {
-  const feedbackSection = document.getElementById('feedback-section');
-  const feedbackMsg = document.getElementById('feedback-msg');
-  feedbackMsg.textContent = '';
-
-  // Reset thumbs up/down buttons
-  const upBtn = document.getElementById('feedback-up');
-  const downBtn = document.getElementById('feedback-down');
-  upBtn.disabled = false;
-  downBtn.disabled = false;
-  upBtn.style.border = "";
-  upBtn.style.boxShadow = "";
-  downBtn.style.border = "";
-  downBtn.style.boxShadow = "";
-
-  // Reset star rating
-  selectedStar = 0;
-  stars.forEach(star => {
-    star.classList.remove('selected');
-    star.style.pointerEvents = 'auto';  // re-enable clicks
-    star.style.cursor = 'pointer';
-  });
-
-  feedbackSection.classList.remove('d-none');
-}
-
-async function callFeedbackEndpoint() {
-    await fetch(API_ENDPOINT_FEEDBACK, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(feedbackData)
-    });
-}
-
-async function submitFeedbackJson(isPositive) {
-
-    const feedbackMsg = document.getElementById('feedback-msg');
-    const upBtn = document.getElementById('feedback-up');
-    const downBtn = document.getElementById('feedback-down');
-
-    // Disable buttons immediately
-    upBtn.disabled = true;
-    downBtn.disabled = true;
-
-    // Subtle visual cue: add border & shadow to selected button
-    const selectedBtn = isPositive ? upBtn : downBtn;
-    selectedBtn.style.border = "2px solid #000";
-    selectedBtn.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
-
-     if (feedbackData.feedback == "") {
-       feedbackData.feedback = isPositive ?  "ThumbsUp" : "ThumbsDown";
-     }
-     else {
-       feedbackData.feedback = (isPositive ?  "ThumbsUp" : "ThumbsDown") + " - " + feedbackData.feedback;
-     }
-     feedbackData.isHelpful = isPositive;
-
-    feedbackMsg.textContent = "Thank you for your feedback!";
-
-    await callFeedbackEndpoint();
-    var qq = 1;
-
-}
-
-// Deprecated  - now uses submitFeedbackJson
-async function submitFeedback(isPositive) {
-  const feedbackMsg = document.getElementById('feedback-msg');
-  const upBtn = document.getElementById('feedback-up');
-  const downBtn = document.getElementById('feedback-down');
-
-  // Disable buttons immediately
-  upBtn.disabled = true;
-  downBtn.disabled = true;
-
-  // Subtle visual cue: add border & shadow to selected button
-  const selectedBtn = isPositive ? upBtn : downBtn;
-  selectedBtn.style.border = "2px solid #000";
-  selectedBtn.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
-
-  const payload = {
-    ticket: {
-      shortDescription: document.getElementById('shortDesc').value,
-      longDescription: document.getElementById('longDesc').value,
-      serviceTower: document.getElementById('tower').textContent,
-      intent: document.getElementById('intent').textContent,
-      intentDescription: document.getElementById('intent-description').textContent,
-      summary: document.getElementById("summary").textContent,
-      proposedSolution: document.getElementById('solution').textContent,
-    },
-    feedback: isPositive ? "positive" : "negative"
-  };
-  console.log("Feedback entered: ");
-  console.log(payload);
-
-  try {
-    // Optional: send feedback to your API
-    // await fetch('/api/feedback', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload)
-    // });
-
-    feedbackMsg.textContent = "Thank you for your feedback!";
-  } catch (err) {
-    console.error("Error sending feedback:", err);
-    feedbackMsg.textContent = "Error submitting feedback. Please try again.";
-    // Re-enable buttons if sending failed
-    upBtn.disabled = false;
-    downBtn.disabled = false;
-    selectedBtn.style.border = "";
-    selectedBtn.style.boxShadow = "";
-  }
-}
-
-let selectedStar = 0;
-const stars = document.querySelectorAll('#star-rating .star');
-
-stars.forEach(star => {
-  star.addEventListener('mouseover', () => {
-    const val = parseInt(star.dataset.value);
-    highlightStars(val);
-  });
-
-  star.addEventListener('mouseout', () => {
-    highlightStars(selectedStar);
-  });
-
-  star.addEventListener('click', () => {
-    if (selectedStar === 0) {  // only allow selection once
-      selectedStar = parseInt(star.dataset.value);
-      highlightStars(selectedStar);
-      disableStars();
-      submitStarFeedbackJson(selectedStar);
-    }
-  });
-});
-
-function highlightStars(rating) {
-  stars.forEach(star => {
-    const val = parseInt(star.dataset.value);
-    if (val <= rating) {
-      star.classList.add('selected');
-    } else {
-      star.classList.remove('selected');
-    }
-  });
-}
-
-function disableStars() {
-  stars.forEach(star => {
-    star.style.pointerEvents = 'none'; // disable further clicks
-    star.style.cursor = 'default';
-  });
-}
-
-async function submitStarFeedbackJson(rating) {
-
-     const feedbackMsg = document.getElementById('feedback-msg');
-
-     if (feedbackData.feedback == "") {
-       feedbackData.feedback = "" + rating + " stars";
-     }
-     else {
-       feedbackData.feedback = feedbackData.feedback + " - " + rating + " stars";
-     }
-
-     console.log("Star rating submitted:", feedbackData);
-     feedbackMsg.textContent = `Thank you for rating ${rating} star(s)!`;
-     await callFeedbackEndpoint();
-
-     var qq = 1;
-
-}
-
-// Deprecated  - now uses submitStarFeedbackJson
-async function submitStarFeedback(rating) {
-  const feedbackMsg = document.getElementById('feedback-msg');
-  try {
-    const payload = {
-      ticket: {
-        shortDescription: document.getElementById('shortDesc').value,
-        longDescription: document.getElementById('longDesc').value,
-        serviceTower: document.getElementById('tower').textContent,
-        intent: document.getElementById('intent').textContent,
-        intentDescription: document.getElementById('intent-description').textContent,
-        summary: document.getElementById("summary").textContent,
-        proposedSolution: document.getElementById('solution').textContent,
-      },
-      starRating: rating
-    };
-    console.log("Star rating submitted:", payload);
-
-    // Optional: send payload to your API
-    // await fetch('/api/starFeedback', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload)
-    // });
-
-    feedbackMsg.textContent = `Thank you for rating ${rating} star(s)!`;
-  } catch (err) {
-    console.error("Error sending star feedback:", err);
-    feedbackMsg.textContent = "Error submitting star rating. Please try again.";
-  }
-}
-
-
-
-
-/* ===== CSV UPLOAD & PARALLEL BULK PREDICTION WITH PROGRESS BAR ===== */
-let bulkResults = [];
-
-envChar = "t";
-
-/* ===== ROBUST CSV PARSER THAT HANDLES QUOTES, COMMAS & LINE BREAKS ===== */
-async function processExcel() {
-  const bulkSubmitBtn = document.getElementById('bulkSubmitBtn');
-
-  // 🔹 Disable button and show "Processing..."
-  bulkSubmitBtn.disabled = true;
-  bulkSubmitBtn.textContent = "Processing...";
-
-  const fileInput = document.getElementById('excelFileInput');
-  const statusDiv = document.getElementById('bulkStatus');
-  const downloadBtn = document.getElementById('downloadExcelBtn');
-  bulkResults = [];
-  downloadBtn.classList.add('d-none');
-  statusDiv.innerHTML = '';
-  document.getElementById("cancelBulkBtn").classList.remove('d-none');
-  document.getElementById("cancelBulkBtn").disabled = false;
-
-  if (!fileInput.files.length) {
-    alert('Please select an Excel file first.');
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data, { type: 'array' });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
-  if (jsonData.length === 0) {
-    alert("Excel sheet is empty or invalid.");
-    return;
-  }
-
-  const headers = Object.keys(jsonData[0]);
-  const lowerHeaders = headers.map(h => h.toLowerCase());
-  const idIndex = lowerHeaders.indexOf('ticketid');
-  const shortIndex = lowerHeaders.indexOf('short_description');
-  const longIndex = lowerHeaders.indexOf('description');
-
-  if (idIndex === -1 || shortIndex === -1 || longIndex === -1) {
-    alert("Excel must include at least these headers: TICKETID, SHORT_DESCRIPTION, DESCRIPTION");
-    return;
-  }
-
-  // Tickets with required columns
-  let tickets = jsonData.filter(t => t['SHORT_DESCRIPTION']) // && t['DESCRIPTION']);
-
-  // Apply start/end row filtering (1-based indexing)
-  if (END_ROW === -1) END_ROW = tickets.length;      // last row if not provided
-
-  // Convert to zero-based JS array slice
-  const startIndex = Math.max(START_ROW - 1, 0);
-  const endIndex   = Math.min(END_ROW, tickets.length);
-
-  tickets = tickets.slice(startIndex, endIndex);
-
-  const total = tickets.length;
-
-  let completed = 0;
-  const startTime = Date.now();
-
-  cancelRequested = false;
-
-  statusDiv.innerHTML = `
-    <div class="mb-2 text-info">Processing ${total} tickets
-      <span id="initialisationMsg">... Initialising</span>
-      <span>&nbsp;&nbsp;&nbsp;<small><small>(concurrency: ${CONCURRENCY_LIMIT})</small></small></span>
-    </div>
-    <div class="progress" style="height: 25px;">
-      <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
-           role="progressbar" style="width: 0%">0%</div>
-    </div>
-    <div class="mt-2 small text-muted" id="progressText"></div>
-  `;
-
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-  const progressInitText = document.getElementById("initialisationMsg");
-
-  const updateProgress = () => {
-    progressInitText.hidden = true;
-    const percent = Math.round((completed / total) * 100);
-    const elapsed = (Date.now() - startTime) / 1000;
-    const avgPerTicket = elapsed / (completed || 1);
-    const remaining = total - completed;
-    const eta = avgPerTicket * remaining;
-    const etaFormatted = eta < 5 ? `${eta.toFixed(1)}s` :
-                         eta < 60 ? `${Math.round(eta)}s` :
-                         `${Math.round(eta / 60)}m ${Math.round(eta % 60)}s`;
-    progressBar.style.width = percent + '%';
-    progressBar.textContent = percent + '%';
-    progressText.innerHTML = `Processed ${completed}/${total} (${percent}%) — ETA: ${etaFormatted}`;
-
-  //   statusDiv.innerHTML = `
-  //   <div class="mb-2 text-info">
-  //     Processing rows ${START_ROW} to ${END_ROW === -1 ? 'end' : END_ROW}
-  //     <br>Found ${total} tickets to classify...
-  //   </div>
-  //   ...
-  // `;
-
-  };
-
-    async function processBatch(startIndex) {
-      // STOP if user cancelled
-      if (cancelRequested) return;
-
-      const ticket = tickets[startIndex];
-      if (!ticket) return;
-
-      try {
-        const payload = {
-          shortDescription: ticket['SHORT_DESCRIPTION'],
-          description: ticket['DESCRIPTION'],
-          targetIndex: TARGET_INDEX,
-          gcc: GCC
-        };
-
-        const controller = new AbortController();
-        const signal = controller.signal;
-
-        // If user cancels while fetch is in flight → abort it
-        if (cancelRequested) {
-          controller.abort();
-          return;
-        }
-
-        const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal
-        });
-
-        if (response.status == 500) {
-           console.log('aha - 500 error hit');
-           const errData = await response.text();
-           let errExtra = "";
-           if (errData === 'Error: TypeError: Failed to fetch') {
-             errExtra = " - likely CORS error";
-           }
-           console.log('aha - error data: ' + errData + errExtra);
-           throw(errData);
-        }
-
-        if (!cancelRequested) {
-          const data = await response.json();
-
-          bulkResults[startIndex] = {
-            ...ticket,
-            GENAI_service_tower: data.result.predictedServiceTower || '',
-            GENAI_intent: data.result.predictedIntent || '',
-            GENAI_intent_description: data.result.predictedIntentDescription || '',
-            GENAI_proposed_solution: data.result.proposedSolution || '',
-            GENAI_summary: data.result.summary || '',
-            GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",
-            GENAI_solution_evaluation_justification: data.result.solutionEvaluator?.justification ?? ""
-          };
-        }
-      } catch (err) {
-        console.warn(`Cancelled or failed ticket ${ticket['TICKETID']}:`, err);
-        let errExtra = "";
-        if (String(err).startsWith("TypeError: Failed to fetch")) {
-          errExtra = " - likely CORS issue";
-        }
-
-        bulkResults[startIndex] = {
-          ...ticket,
-          GENAI_service_tower: cancelRequested ? 'Cancelled' : 'Error',
-          GENAI_intent: cancelRequested ? 'Cancelled' : ('Error: ' + err + errExtra),
-        };
-      } finally {
-        completed++;
-        updateProgress();
-      }
-
-      if (cancelRequested) return;
-
-      const nextIndex = startIndex + CONCURRENCY_LIMIT;
-      if (nextIndex < tickets.length) {
-        await processBatch(nextIndex);
-      }
-    }
-
-  const workers = [];
-  for (let i = 0; i < CONCURRENCY_LIMIT && i < tickets.length; i++) {
-    workers.push(processBatch(i));
-  }
-
-  await Promise.all(workers);
-
-
-  const progressBarNew = document.getElementById('progressBar');
-  const progressTextNew = document.getElementById('progressText');
-
-  bulkSubmitBtn.disabled = false;
-  bulkSubmitBtn.textContent = "Upload & Predict"; // restore original text
-
-  cancelBtn = document.getElementById('cancelBulkBtn');
-
-  cancelBtn.classList.add('d-none'); // hide cancel button
-
-  if (cancelRequested) {
-    progressBarNew.classList.remove('progress-bar-animated');
-    progressBarNew.classList.add('bg-warning');
-    progressTextNew.innerHTML = `⚠️ Processing cancelled — ${completed} tickets completed.`;
-
-    // ✅ FIX: remove the lingering "finishing active tasks" text
-        document.getElementById("initialisationMsg").remove();
-        document.getElementById("cancelReqMsg").innerHTML = ""; //rbm
-
-
-    document.getElementById('downloadExcelBtn').classList.remove('d-none');
-    cancelBtn.classList.add('d-none');
-    return;
-}
-
-// Normal completion
-progressBarNew.classList.remove('progress-bar-animated');
-progressBarNew.classList.add('bg-success');
-progressBarNew.textContent = '100%';
-progressTextNew.innerHTML = `✅ Completed processing all ${bulkResults.length} tickets.`;
-
-document.getElementById('downloadExcelBtn').classList.remove('d-none');
-
-}
-
-function downloadExcel() {
-  if (bulkResults.length === 0) return;
-
-  const fileInput = document.getElementById('excelFileInput');
-  const inputFile = fileInput.files[0];
-
-  // Determine base input name
-  let baseName = "ticket_predictions";
-  if (inputFile && inputFile.name) {
-    const dotIndex = inputFile.name.lastIndexOf('.');
-    baseName = dotIndex !== -1 ? inputFile.name.substring(0, dotIndex) : inputFile.name;
-  }
-
-  // Determine output filename
-  let outputName;
-  const startParamExists = urlParams.has('start');
-  const endParamExists = urlParams.has('end');
-
-  if (startParamExists || endParamExists) {
-    // Only include row numbers if either param exists
-    const endRowForName = END_ROW === -1 ? (START_ROW + bulkResults.length - 1) : END_ROW;
-    outputName = `${baseName}_rows_${START_ROW}_to_${endRowForName}_PREDICTION_RESULTS.xlsx`;
-  } else {
-    outputName = `${baseName}_PREDICTION_RESULTS.xlsx`;
-  }
-
-  const ws = XLSX.utils.json_to_sheet(
-    bulkResults.filter(r => r != null)
-  );
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Predictions");
-
-  XLSX.writeFile(wb, outputName);
-}
-
-function handleEnterSubmit(event) {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault(); // prevent newline
-    submitTicket();         // call your existing submit function
-  }
-}
-
-function showDiagnostics() {
-  if (!latestTimeTaken) return;
-
-  const tbody = document.getElementById('diagnosticsTable').querySelector('tbody');
-  tbody.innerHTML = ''; // clear previous rows
-
-  for (const [step, time] of Object.entries(latestTimeTaken)) {
-    const tr = document.createElement('tr');
-    const tdStep = document.createElement('td');
-    tdStep.textContent = step;
-    const tdTime = document.createElement('td');
-    tdTime.textContent = time;
-    tr.appendChild(tdStep);
-    tr.appendChild(tdTime);
-    tbody.appendChild(tr);
-  }
-
-  document.getElementById('diagnosticsCard').classList.remove('d-none');
-}
-
-function toggleDiagnostics() {
-  const diagCard = document.getElementById('diagnosticsCard');
-  const diagBtn = document.getElementById('showDiagnosticsBtn');
-
-  if (diagCard.classList.contains('d-none')) {
-    if (latestTimeTaken) {
-      const tbody = diagCard.querySelector('tbody');
-      tbody.innerHTML = '';
-
-      const tokenData = window.lastTokensUsed || {};
-
-      // Mapping between step names and tokens object keys
-      const tokenMap = {
-        serviceTowerPredict: tokenData.service_tower ||  tokenData.serviceTowerPredict || {},
-        intentPredict: tokenData.intent || tokenData.intentPredict ||  {},
-        createTicketSummary: tokenData.ticket_summary || tokenData.createTicketSummary ||  {},
-        createProposedSolution: tokenData.proposed_solution ||  tokenData.proposedSolution || {}
-      };
-
-      let totalPrompt = 0;
-      let totalCompletion = 0;
-
-      for (const [step, time] of Object.entries(latestTimeTaken)) {
-        const tr = document.createElement('tr');
-        const tdStep = document.createElement('td');
-        tdStep.textContent = step;
-
-        const tdTime = document.createElement('td');
-        tdTime.textContent = time;
-
-        let prompt = '-';
-        let completion = '-';
-
-        let tokenStep = "";
-
-        switch (step) {
-          case 'serviceTower':
-            tokenStep = "serviceTowerPredict";
-            break;
-          case 'intent':
-            tokenStep = "intentPredict";
-            break;
-          case 'summariseTicket':
-            tokenStep = "createTicketSummary";
-            break;
-          case 'proposeSolution':
-            tokenStep = "createProposedSolution";
-            break;
-          default:
-            tokenStep = step;
-
-        }
-
-
-        if (tokenStep !== 'overall') {
-          const tData = tokenMap[tokenStep] || {};
-          prompt = tData.prompt ?? '-';
-          completion = tData.completion ?? '-';
-          if (!isNaN(parseInt(tData.prompt))) totalPrompt += parseInt(tData.prompt);
-          if (!isNaN(parseInt(tData.completion))) totalCompletion += parseInt(tData.completion);
-        }
-
-        const tdPrompt = document.createElement('td');
-        const tdCompletion = document.createElement('td');
-
-        // For the "overall" row, display the total tokens
-        if (tokenStep === 'overall') {
-          tdPrompt.textContent = totalPrompt || '-';
-          tdCompletion.textContent = totalCompletion || '-';
-          tr.classList.add('table-secondary', 'fw-bold');
-        } else {
-          tdPrompt.textContent = prompt;
-          tdCompletion.textContent = completion;
-        }
-
-        tr.appendChild(tdStep);
-        tr.appendChild(tdTime);
-        tr.appendChild(tdPrompt);
-        tr.appendChild(tdCompletion);
-        tbody.appendChild(tr);
-      }
-
-      // Add endpoint row at the bottom
-      const endpointRow = document.createElement('tr');
-      endpointRow.innerHTML = `
-        <td>Endpoint</td>
-        <td colspan="3">${API_ENDPOINT}</td>
-      `;
-      tbody.appendChild(endpointRow);
-    }
-
-    diagCard.classList.remove('d-none');
-    diagBtn.textContent = 'Hide Diagnostics';
-  } else {
-    diagCard.classList.add('d-none');
-    diagBtn.textContent = 'Show Diagnostics';
-  }
-}
-
-function displayEnv() {
-
-  var displayEnvs = {"t": "tstnf",
-                     "q": "qas",
-                     "l": "local"}
-
-  document.getElementById("envText").innerHTML = displayEnvs[TARGET_ENV];
-
-
-}
-
-function displayLang() {
-
-  if  (TARGET_LANG === "python") {
-    document.getElementById("langText").innerHTML = TARGET_LANG;
-  }
-  else {
-    document.getElementById("langText").innerHTML = "C#";
-  }
-
-
-}
-
-function displayEndpoint() {
-
-
-  document.getElementById("endpointText").innerHTML = "(" + API_ENDPOINT + ")";
-
-
-}
-
-
-function displayGcc() {
-   document.getElementById("gccText").innerHTML = " GCC: " + GCC;
-
-}
-
-function targetLangOrEnvChanged() {
-   switch (TARGET_ENV) {
-    case "t":
-      if (TARGET_LANG == "python") {
-        API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
-        API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
-        API_ENDPOINT_FEEDBACK = "https://func-t-weu-assistant-genai-05.azurewebsites.net/api/predictfeedback"
-      }
-      else {
-        API_ENDPOINT = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict'; //TSTNF
-        API_ENDPOINT_EXTRA = "==QTa-ccuFzAN1BCqP-2isQChQb96l_Fe_yOg8SibDHME01CdMEJIjaG=edoc?".split('').reverse().join('');  //TSTNF
-        API_ENDPOINT_FEEDBACK = 'https://func-t-weu-assistant-02.azurewebsites.net/api/predict/feedback'; //TSTNF
-
-      }
-      CUSTOMER_CODE = "Z05";
-      break;
-    case "q":
-      if (TARGET_LANG == "python") {
-
-          API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
-          API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
-          API_ENDPOINT_FEEDBACK = "https://func-t-weu-assistant-genai-05.azurewebsites.net/api/predictfeedback"
-      }
-      else {
-           API_ENDPOINT = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict';  //QAS
-           API_ENDPOINT_EXTRA = "==gewZ1wuFzABZKuyz_K9LFe29NXjaJR4x689iCs_Ab2N0B5_qyJX7nn=edoc?".split('').reverse().join('');  // QAS
-           API_ENDPOINT_FEEDBACK = 'https://func-q-weu-assistant-01.azurewebsites.net/api/predict/feedback';  //QAS
-      }
-      CUSTOMER_CODE = "ZCS";
-      break;
-    case "l":
-
-      if (TARGET_LANG == "python") {
-          API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
-          API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback"
-      }
-      else {
-         API_ENDPOINT = "http://localhost:7075/api/predict" // C#  local
-         API_ENDPOINT_FEEDBACK = "http://localhost:7075/api/predict/feedback";
-      }
-      CUSTOMER_CODE = "Z05";
-      break;
-  }
-
-}
-
-function targetEnvChanged() {
-  targetLangChanged();
-  // switch (TARGET_ENV) {
-  //   case "t":
-  //     API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
-  //     API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
-  //     break;
-  //   case "q":
-  //     API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
-  //     API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
-  //     break;
-  //   case "l":
-  //     API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
-  //     break;
-  // }
-
-
-  displayEnv();
-  displayEndpoint();
-
-
-
-}
-
-function targetLangChanged() {
-  targetLangOrEnvChanged();
-
-  // switch (TARGET_LANG) {
-  //   case "t":
-  //     API_ENDPOINT = 'https://func-t-weu-assistant-genai-02.azurewebsites.net/api/predict'; //TSTNF
-  //     API_ENDPOINT_EXTRA = "==wVJdxVuFzAhfB2NheeVI903ZX9JVWhnACD7U1LUnL4NZHB0Tqce7pE=edoc?".split('').reverse().join('');  //TSTNF
-  //     break;
-  //   case "q":
-  //     API_ENDPOINT = 'https://func-q-weu-assistant-genai-01.azurewebsites.net/api/predict';  //QAS
-  //     API_ENDPOINT_EXTRA = "==QBiZRCuFzA5JO_TzGtA1cXbwYYvs9Tjcvw4fTj2gElJCTysc4V7NLm=edoc?".split('').reverse().join(''); // QAS
-  //     break;
-  //   case "l":
-  //     API_ENDPOINT = "http://localhost:7071/api/predict" // Python local
-  //     break;
-  // }
-
-  displayLang();
-  displayEndpoint();
-
-
-
-}
-
-
-function gccChanged() {
-  displayGcc();
-
-}
-
-function cancelBulkProcessing() {
-  document.getElementById("initialisationMsg").hidden = true;
-
-  cancelRequested = true;
-
-  // ✅ FIX: hide the "Cancellation requested — finishing active tasks.." message immediately
-  const initMsg = document.getElementById("initialisationMsg");
-  if (initMsg) initMsg.hidden = true;
-
-
-  const statusDiv = document.getElementById('bulkStatus');
-  const progressText = document.getElementById('progressText');
-  const progressBar = document.getElementById('progressBar');
-  const cancelBtn = document.getElementById('cancelBulkBtn');
-
-  cancelBtn.disabled = true;
-  cancelBtn.textContent = "Cancelling...";
-
-  progressBar.classList.remove('progress-bar-animated');
-  progressBar.classList.add('bg-warning');
-  progressText.innerHTML = "⏳ Cancelling remaining tasks...";
-
-  statusDiv.insertAdjacentHTML(
-    "beforeend",
-    `<div id="cancelReqMsg" class="mt-2 text-danger">Cancellation requested — finishing active tasks...</div>`
-  );
-}
-
-function generateRandomString(length) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0987654321';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-}
-
-
-
-
-
-   fetch('config.json')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to load config.json');
-      }
-      return response.json();
-    })
-    .then(config => {
-      const versionEl = document.getElementById('app-version');
-      if (versionEl) {
-        versionEl.textContent = `Version ${config.version}`;
-      }
-
-    })
-    .catch(error => {
-      console.error('Error loading config:', error);
-    });
-
-</script>
+<script src="./js_ticket_playground/utils.js"></script>
+<script src="./js_ticket_playground/view.js"></script>
+<script src="./js_ticket_playground/modellisteners.js"></script>
+<script src="./js_ticket_playground/eventlisteners.js"></script>
+<script src="./js_ticket_playground/model.js"></script>
+<script src="./js_ticket_playground/main.js"></script>
+
+<script></script>
 </body>
 </html>
