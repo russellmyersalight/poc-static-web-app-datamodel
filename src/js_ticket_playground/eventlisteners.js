@@ -82,6 +82,7 @@ async function submitTicket() {
     // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
+    document.getElementById('request-type').textContent = (data.result.predictedRequestType === null) ? "" : data.result.predictedRequestType;
 
 
     //var solutionLangKeys = Object.keys(data.result.proposedSolution);
