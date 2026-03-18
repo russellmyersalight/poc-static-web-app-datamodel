@@ -125,11 +125,16 @@ function dictToHtmlList(dict) {
 }
 
 async function callFeedbackEndpoint() {
-    await fetch(API_ENDPOINT_FEEDBACK, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(feedbackData)
-    });
+    try {
+      await fetch(API_ENDPOINT_FEEDBACK, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(feedbackData)
+      });
+    }
+    catch (e) {
+      console.log("Feedback bypassed");
+    }
 }
 
 
