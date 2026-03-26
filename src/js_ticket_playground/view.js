@@ -31,22 +31,22 @@ function displayEndpoint() {
 
 
 function displayGcc() {
-   document.getElementById("gccText").innerHTML = " GCC: " + GCC;
+   document.getElementById("gccText").innerHTML = " GCC: <b>" + GCC + "</b>&nbsp;&nbsp;&nbsp;";
 
 }
 
 function displayLcc() {
-   document.getElementById("lccText").innerHTML = " LCC: " + LCC;
+   document.getElementById("lccText").innerHTML = " LCC: <b>" + LCC + "</b>&nbsp;&nbsp;&nbsp;";
 
 }
 
 function displayUser() {
-   document.getElementById("userText").innerHTML = " User: " + USER_NAME;
+   document.getElementById("userText").innerHTML = " User: <b> " + USER_NAME + "</b>&nbsp;&nbsp;&nbsp;";
 
 }
 
 function displayDueDate() {
-  document.getElementById("dueDate").innerHTML = " Ticket Due Date: " + TICKET_DUE_DATE;
+  document.getElementById("dueDate").innerHTML = " Ticket Due Date: <b>" + TICKET_DUE_DATE + "</b>&nbsp;&nbsp;&nbsp;";
 }
 
 function displaySource() {
@@ -55,12 +55,12 @@ function displaySource() {
   }
   else
   {
-    document.getElementById("source").innerHTML = " Ticket Source supplied: " + TICKET_SOURCE;
+    document.getElementById("source").innerHTML = " Ticket Source supplied: <b>" + TICKET_SOURCE + "</b>&nbsp;&nbsp;&nbsp;";
   }
 }
 
 function displayUserEmail() {
-   document.getElementById("userEmail").innerHTML = " email: " + USER_EMAIL;
+   document.getElementById("userEmail").innerHTML = " email: <b>" + USER_EMAIL + "</b>&nbsp;&nbsp;&nbsp;";
 
 }
 
