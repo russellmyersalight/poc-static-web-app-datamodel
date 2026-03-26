@@ -91,8 +91,8 @@ async function submitTicket() {
     // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
-    document.getElementById('request-type').innerHTML = (data.result.predictedRequestType === null) ? "" : "<span style='color: green;'>" + data.result.predictedRequestType; + "</span>";
-    document.getElementById('detected-source').textContent = (data.result.detectedSource === null) ? "" : data.result.detectedSource;
+    document.getElementById('request-type').innerHTML = (data.result.predictedRequestType == null) ? "" : "<span style='color: green;'>" + data.result.predictedRequestType; + "</span>";
+    document.getElementById('detected-source').textContent = (data.result.detectedSource == null) ? "" : data.result.detectedSource;
 
 
     var workInstructionHTML = "";
