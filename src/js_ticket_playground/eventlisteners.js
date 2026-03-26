@@ -91,7 +91,7 @@ async function submitTicket() {
     // if (data.result.predictedIntentDescription === 'Missing description')
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
-    document.getElementById('request-type').textContent = (data.result.predictedRequestType === null) ? "" : data.result.predictedRequestType;
+    document.getElementById('request-type').innerHTML = (data.result.predictedRequestType === null) ? "" : "<span style='color: green;'>" + data.result.predictedRequestType; + "</span>";
     document.getElementById('detected-source').textContent = (data.result.detectedSource === null) ? "" : data.result.detectedSource;
 
 
@@ -101,7 +101,7 @@ async function submitTicket() {
     }
     else {
       data.result.proposedWorkInstructions.forEach( (row, index) => {
-           workInstructionHTML += "<br><u>Solution</u>  <small>(language: " + row["language"] + ")</small>" + "<br><br>" + row["solution"] + "<br><br>";
+           workInstructionHTML += "<br><u>Work Instruction</u>  <small>(language: " + row["language"] + ")</small>" + "<br><br>" + row["solution"] + "<br><br>";
            if (index > 0) {
              workInstructionHTML += "<hr>";
            }
