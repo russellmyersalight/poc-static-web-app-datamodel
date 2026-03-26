@@ -96,7 +96,7 @@ async function submitTicket() {
 
 
     var workInstructionHTML = "";
-    if (data.result.proposedWorkInstructions === null) {
+    if (data.result.proposedWorkInstructions == null) {
 
     }
     else {
