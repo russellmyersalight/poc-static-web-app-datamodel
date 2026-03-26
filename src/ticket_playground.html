@@ -56,7 +56,7 @@
 
   <div class="text-center mb-5">
     <h1 class="display-5">AI Ticket Classification Playground</h1>
-    <small><small class="text-muted" id="app-version">Version ...</small></small> &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small> <small><small><small id="langText">python</small></small></small> <small><small><small id="endpointText"></small></small></small> <span>&nbsp;&nbsp;&nbsp;</SPAN>  <small><small><small id="gccText"></small></small></small> <small><small><small id="lccText"></small></small></small> <small><small><small id="userText"></small></small></small>
+    <small><small class="text-muted" id="app-version">Version ...</small></small> &nbsp;&nbsp;<small><small><small id="envText">t</small></small></small> <small><small><small id="langText">python</small></small></small> <small><small><small id="endpointText"></small></small></small> <span>&nbsp;&nbsp;&nbsp;</SPAN>  <small><small><small id="gccText"></small></small></small> <small><small><small id="lccText"></small></small></small> <small><small><small id="userText"></small></small></small><small><small><small id="userEmail"></small></small></small><small><small><small id="dueDate"></small></small></small><small><small><small id="source"></small></small></small>
   </div>
 
   <!-- Tabs -->
@@ -104,10 +104,12 @@
                   <tr><th>Intent</th><td class="text-primary" id="intent"></td></tr>
                   <tr><th>Intent Description</th><td class="text-primary" id="intent-description"></td></tr>
                   <tr><th>Request Type</th><td class="text-primary" id="request-type"></td></tr>
+                  <tr><th>Ticket Source</th><td class="text-primary" id="detected-source"></td></tr>
                   <tr id="proposedsolutionrow"><th id="proposedsolutionrowtitle">Proposed Solution</th><td id="solution"></td></tr>
                   <tr id="proposedsolutionfallbackrow"><th>Proposed Solution (EN)</th><td id="solution-fallback"></td></tr>
                   <tr id="summaryrow"><th id="summaryrowtitle">Summary</th><td id="summary"></td></tr>
                   <tr id="summaryfallbackrow"><th>Summary (EN)</th><td id="summary-fallback"></td></tr>
+                  <tr id="workinstructionsrow" class="d-none"><th>Proposed Work Instructions</th><td id="proposed-work-instructions"></td></tr>
 
                 </tbody>
               </table>
@@ -119,6 +121,12 @@
                   <input class="form-check-input" type="checkbox" role="switch" id="inlineRefsToggle">
                   <label class="form-check-label fw-semibold ms-2" for="inlineRefsToggle">
                     Show inline ref ids
+                  </label>
+              </div>
+              <div class="form-check form-switch mt-3 d-none" id="showWorkInstructionsToggleContainer">
+                  <input class="form-check-input" type="checkbox" role="switch" id="showWorkInstructionsToggle">
+                  <label class="form-check-label fw-semibold ms-2" for="showWorkInstructionsToggle">
+                    Show Work Instructions
                   </label>
               </div>
               <div id="feedback-section" class="text-center mt-3 d-none">

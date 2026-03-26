@@ -25,7 +25,8 @@ async function submitTicket() {
       targetIndex: TARGET_INDEX,
       gcc: GCC,
       lcc: LCC,
-      requester: {firstname: USER_NAME},
+      requester: {firstname: USER_NAME,
+                  email: USER_EMAIL},
   }
   if (TONE != null) {
     submitPayload.formality = TONE;
@@ -35,6 +36,14 @@ async function submitTicket() {
   }
     if (SHOW_INLINE_REFS != null) {
       submitPayload.showInlineRefs = SHOW_INLINE_REFS;
+  }
+
+  if (TICKET_SOURCE != null) {
+    submitPayload.source = TICKET_SOURCE;
+  }
+
+  if (TICKET_DUE_DATE != null) {
+    submitPayload.ticketDueDate = TICKET_DUE_DATE;
   }
 
   var submitPayloadString = JSON.stringify(submitPayload);
@@ -83,6 +92,23 @@ async function submitTicket() {
     document.getElementById('intent-description').textContent = (data.result.predictedIntentDescription === 'Missing description') ? "" : data.result.predictedIntentDescription;
     //document.getElementById('solution').textContent = data.result.proposedSolution.length == 0 ? "No knowledge articles found" : data.result.proposedSolution;
     document.getElementById('request-type').textContent = (data.result.predictedRequestType === null) ? "" : data.result.predictedRequestType;
+    document.getElementById('detected-source').textContent = (data.result.detectedSource === null) ? "" : data.result.detectedSource;
+
+
+    var workInstructionHTML = "";
+    if (data.result.proposedWorkInstructions === null) {
+
+    }
+    else {
+      data.result.proposedWorkInstructions.forEach( (row, index) => {
+           workInstructionHTML += "<br><u>Solution</u>  <small>(language: " + row["language"] + ")</small>" + "<br><br>" + row["solution"] + "<br><br>";
+           if (index > 0) {
+             workInstructionHTML += "<hr>";
+           }
+      });
+    }
+    document.getElementById('proposed-work-instructions').innerHTML = workInstructionHTML;
+
 
 
     //var solutionLangKeys = Object.keys(data.result.proposedSolution);
@@ -223,6 +249,13 @@ async function submitTicket() {
 
     inlineToggle.checked = false;
     inlineToggleContainer.classList.remove("d-none");
+
+    const showWorkInstructionsToggleContainer = document.getElementById("showWorkInstructionsToggleContainer");
+    showWorkInstructionsToggle = document.getElementById("showWorkInstructionsToggle");
+
+    showWorkInstructionsToggle.checked = false;
+    showWorkInstructionsToggleContainer.classList.remove("d-none");
+
 
 
     const ticketToken = generateRandomString(16); // Generates a 16-character token
@@ -508,7 +541,8 @@ async function processExcel() {
           targetIndex: TARGET_INDEX,
           gcc: GCC,
           lcc: LCC,
-          requester: {firstname: USER_NAME}
+          requester: {firstname: USER_NAME,
+                      email: USER_EMAIL}
         };
 
         if (TONE != null) {
@@ -519,6 +553,14 @@ async function processExcel() {
         }
           if (SHOW_INLINE_REFS != null) {
             payload.showInlineRefs = SHOW_INLINE_REFS;
+        }
+
+        if (TICKET_SOURCE != null) {
+             payload.source = TICKET_SOURCE;
+        }
+
+        if (TICKET_DUE_DATE != null) {
+            payload.ticketDueDate = TICKET_DUE_DATE;
         }
 
 

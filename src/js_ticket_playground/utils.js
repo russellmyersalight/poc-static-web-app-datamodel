@@ -175,3 +175,47 @@ function generateRandomString(length) {
   if (!text) return text;
   return text.replace(/\[ref_id:\d+\]/g, '');
 }
+
+
+  function getFutureDateOneWeek() {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${day}/${month}/${year}`;
+}
+
+
+  function getFutureDateOneWeekPretty() {
+      const date = new Date();
+      date.setDate(date.getDate() + 7);
+
+      const day = date.getDate();
+      const year = date.getFullYear();
+
+      // Month names
+      const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+      ];
+      const month = monthNames[date.getMonth()];
+
+      // Ordinal suffix helper
+      function getOrdinalSuffix(n) {
+          if (n >= 11 && n <= 13) return "th"; // special cases: 11th, 12th, 13th
+          switch (n % 10) {
+              case 1: return "st";
+              case 2: return "nd";
+              case 3: return "rd";
+              default: return "th";
+          }
+      }
+
+      const suffix = getOrdinalSuffix(day);
+
+      return `${day}${suffix} ${month} ${year}`;
+  }
+

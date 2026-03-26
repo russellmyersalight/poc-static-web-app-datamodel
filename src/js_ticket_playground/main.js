@@ -49,6 +49,8 @@ stars.forEach(star => {
 
 document.addEventListener("DOMContentLoaded", function () {
     const inlineToggle = document.getElementById("inlineRefsToggle");
+    const showWorkInstructionsToggle = document.getElementById("showWorkInstructionsToggle");
+    const proposedWorkInstructionsRowEl = document.getElementById("workinstructionsrow");
     const solElem = document.getElementById("solution");
     const fallbackSolElem =  document.getElementById("solution-fallback");
 
@@ -63,4 +65,17 @@ document.addEventListener("DOMContentLoaded", function () {
         fallbackSolElem.innerHTML = stripInlineRefs(window.currentRawFallbackSolution);
       }
     });
+
+    showWorkInstructionsToggle.addEventListener("change", function () {
+      //if (!window.currentRawFallbackSolution) return;
+
+      if (showWorkInstructionsToggle.checked) {
+        proposedWorkInstructionsRowEl.classList.remove("d-none");
+
+      } else {
+        proposedWorkInstructionsRowEl.classList.add("d-none");
+
+      }
+    });
+
 });

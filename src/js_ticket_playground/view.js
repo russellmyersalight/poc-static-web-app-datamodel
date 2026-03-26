@@ -45,6 +45,25 @@ function displayUser() {
 
 }
 
+function displayDueDate() {
+  document.getElementById("dueDate").innerHTML = " Ticket Due Date: " + TICKET_DUE_DATE;
+}
+
+function displaySource() {
+  if ((TICKET_SOURCE === null) || (TICKET_SOURCE === "")) {
+
+  }
+  else
+  {
+    document.getElementById("source").innerHTML = " Ticket Source supplied: " + TICKET_SOURCE;
+  }
+}
+
+function displayUserEmail() {
+   document.getElementById("userEmail").innerHTML = " email: " + USER_EMAIL;
+
+}
+
 
 function setupLanguageDetectionDiv() {
     const langDetectionDiv = document.getElementById("language-detection-div");

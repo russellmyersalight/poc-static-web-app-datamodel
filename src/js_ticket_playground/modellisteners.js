@@ -75,3 +75,16 @@ function lccChanged() {
 function userChanged() {
   displayUser();
 }
+
+function dueDateChanged() {
+  displayDueDate();
+}
+
+function sourceChanged() {
+  displaySource();
+}
+
+
+function userEmailChanged() {
+  displayUserEmail();
+}

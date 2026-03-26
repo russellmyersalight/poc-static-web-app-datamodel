@@ -96,6 +96,47 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
 
  lccChanged();
 
+ let TICKET_DUE_DATE = getFutureDateOneWeekPretty();
+
+ const ticketDueDateParam = urlParams.get('dueDate');
+
+ if (ticketDueDateParam == null) {
+
+ }
+ else {
+   TICKET_DUE_DATE = ticketDueDateParam;
+ }
+
+ dueDateChanged();
+
+ let TICKET_SOURCE = null;
+
+ const ticketSourceParam = urlParams.get('source');
+
+ if (ticketSourceParam == null) {
+
+ }
+ else {
+   TICKET_SOURCE = ticketSourceParam;
+ }
+
+ sourceChanged();
+
+
+let USER_EMAIL = "me@123.com";
+
+ const userEmailParam = urlParams.get('email');
+
+ if (userEmailParam == null) {
+
+ }
+ else {
+   USER_EMAIL = userEmailParam;
+ }
+
+ userEmailChanged();
+
+
 let TONE = null;
 
  const toneParam = urlParams.get('tone');
