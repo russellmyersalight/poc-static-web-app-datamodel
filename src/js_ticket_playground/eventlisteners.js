@@ -85,6 +85,23 @@ async function submitTicket() {
     }
 
 
+    var categoryDescriptions = {   "A":  "The proposed response directly answers the requesters query",
+                                        "B": "The proposed response provides steps or work instructions for the *requester* to take to satisfy the query themselves",
+                                        "C": "The proposed response provides steps, work instructions, or guidance that would help a *human agent* (not the requester) resolve/action the users query",
+                                        "D": "The proposed response provides steps, work instructions, or guidance that would help a *human agent* (not the requester) resolve/action the users query",
+                                        "E": "The proposed response does not provide a solution at all"
+                                    }
+
+    try {
+      document.getElementById('response-category-detected').textContent = data.result.responseCategory;
+      document.getElementById('response-category-description-detected').textContent = categoryDescriptions[data.result.responseCategory];
+    }
+    catch (error) {
+      document.getElementById('response-category-detected').textContent = "";
+      document.getElementById('response-category-description-detected').textContent = "";
+    }
+
+
 
     document.getElementById('tower').textContent = data.result.predictedServiceTower;
     document.getElementById('intent').textContent = data.result.predictedIntent;
@@ -606,6 +623,26 @@ async function processExcel() {
               proposedSolutions.push("");   // only 1 language result
           }
 
+
+
+          var workInstructions = [];
+          if  (data.result.proposedWorkInstructions == null) {
+               workInstructions.push("");
+               workInstructions.push("");
+
+          }
+          else {
+            for (let i = 0; i < data.result.proposedWorkInstructions.length; i++) {
+              console.log(data.result.proposedWorkInstructions[i]);
+              workInstructions.push(data.result.proposedWorkInstructions[i].solution)
+            }
+            if (data.result.proposedWorkInstructions.length == 1) {
+              workInstructions.push("");   // only 1 language result
+            }
+          }
+
+
+
           bulkResults[startIndex] = {
             ...ticket,
             GENAI_service_tower: data.result.predictedServiceTower || '',
@@ -616,6 +653,12 @@ async function processExcel() {
             GENAI_proposed_solution: proposedSolutions[0],
             GENAI_proposed_solution_EN: proposedSolutions[1],
             GENAI_summary: data.result.summary || '',
+            GENAI_predicted_request_type: data.result.predictedRequestType || '',
+            GENAI_detected_source: data.result.detectedSource || '',
+            GENAI_response_category: data.result.responseCategory || '',
+            GENAI_response_category_description: '',
+            GENAI_work_instructions: workInstructions[0],
+            GENAI_work_instructions_EN: workInstructions[1],
             GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",
             GENAI_solution_evaluation_justification: data.result.solutionEvaluator?.justification ?? ""
           };
