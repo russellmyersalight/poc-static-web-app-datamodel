@@ -655,7 +655,7 @@ async function processExcel() {
             GENAI_summary: data.result.summary || '',
             GENAI_predicted_request_type: data.result.predictedRequestType || '',
             GENAI_detected_source: data.result.detectedSource || '',
-            GENAI_response_category: data.result.responseCategory || '',
+            GENAI_response_category: data.result.detectedResponseCategory || '',
             GENAI_response_category_description: '',
             GENAI_work_instructions: workInstructions[0],
             GENAI_work_instructions_EN: workInstructions[1],
