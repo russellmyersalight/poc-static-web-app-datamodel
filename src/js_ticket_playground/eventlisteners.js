@@ -93,8 +93,8 @@ async function submitTicket() {
                                     }
 
     try {
-      document.getElementById('response-category-detected').textContent = data.result.responseCategory;
-      document.getElementById('response-category-description-detected').textContent = categoryDescriptions[data.result.responseCategory];
+      document.getElementById('response-category-detected').textContent = data.result.detectedResponseCategory;
+      document.getElementById('response-category-description-detected').textContent = categoryDescriptions[data.result.detectedResponseCategory];
     }
     catch (error) {
       document.getElementById('response-category-detected').textContent = "";
