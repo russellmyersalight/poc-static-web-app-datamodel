@@ -264,7 +264,7 @@ async function submitTicket() {
       document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
     }
 
-    if (data.documents.length == 0) {
+    if (!data.documents || data.documents.length === 0) {
 
     }
     else {
