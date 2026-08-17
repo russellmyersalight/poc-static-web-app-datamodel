@@ -52,8 +52,10 @@ async function submitTicket() {
   try {
     const response = await fetch(API_ENDPOINT + API_ENDPOINT_EXTRA, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:  submitPayloadString
+      headers: { 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${ACCESS_TOKEN}`},
+      body:  submitPayloadString,
+
       //body:  JSON.stringify({ shortDescription: shortDesc, description: longDesc, targetIndex: TARGET_INDEX, gcc: GCC,  lcc: LCC, requester: {firstname: USER_NAME}, formality: TONE, contractedLanguages: CONTRACTED_LANGUAGES, showInlineRefs: SHOW_INLINE_REFS} )
     });
     const data = await response.json();
@@ -65,10 +67,11 @@ async function submitTicket() {
         window.solutionEvaluator = {};
     }
 
-    // Store timeTaken globally for diagnostics
+    // Store timeTaken anf targetAgentUsed globally for diagnostics
     latestTimeTaken = data.timeTaken;
     latestTimeTaken.languageTranslationFallback = "";
     window.lastTokensUsed = data.tokensUsed;
+    window.targetAgentUsed = data.result.targetAgentUsed || "..";
 
     try {
       document.getElementById('language-detected').textContent = data.languageDetection.ticketLanguageDetected;
@@ -252,12 +255,25 @@ async function submitTicket() {
 
 
     let formattedCitationLinks = formatCitationLinks(data.originalProposedSolutionWithRefs, data.citationLinks);
+    let citationLinksIncludeWI = citationLinksIncludeWorkInstructions(formattedCitationLinks);
     citationList = dictToHtmlList(formattedCitationLinks);
     if (Object.keys(formattedCitationLinks).length == 0) {
        document.getElementById("citation-info").innerHTML = "Citation reference links: None";
     }
     else {
       document.getElementById("citation-info").innerHTML = "Citation reference links:<br>" + citationList;
+    }
+
+    if (data.documents.length == 0) {
+
+    }
+    else {
+      documentsHTML = "";
+      for (var i = 0;i < data.documents.length;++i) {
+           documentsHTML += `<span style="display:inline-block;  padding:2px 8px;background:#e8f4fd;border-radius:12px;margin-right:4px;">Id: ${data.documents[i].id}</span><span style="display:inline-block;padding:2px 8px;background:#f3e8fd;border-radius:12px;">Name: ${data.documents[i].name}</span><br>`;
+           //documentsHTML += ("id: <b>" + data.documents[i].id + "</b> name: <b>" + data.documents[i].name + "</b><br>");
+      }
+      document.getElementById("documentstd").innerHTML = documentsHTML;
     }
 
         // Show inline refs toggle (default off)
@@ -641,6 +657,9 @@ async function processExcel() {
             }
           }
 
+          let formattedCitationLinks = formatCitationLinks(data.originalProposedSolutionWithRefs, data.citationLinks);
+          let citationLinksIncludeWI = citationLinksIncludeWorkInstructions(formattedCitationLinks);
+
 
 
           bulkResults[startIndex] = {
@@ -655,8 +674,9 @@ async function processExcel() {
             GENAI_summary: data.result.summary || '',
             GENAI_predicted_request_type: data.result.predictedRequestType || '',
             GENAI_detected_source: data.result.detectedSource || '',
-            GENAI_response_category: data.result.detectedResponseCategory || '',
+            GENAI_response_category: data.result.detectedResponseCategory ||  data.result.responseCategory || '',
             GENAI_response_category_description: '',
+            GENAI_citations_include_WI: citationLinksIncludeWI,
             GENAI_work_instructions: workInstructions[0],
             GENAI_work_instructions_EN: workInstructions[1],
             GENAI_solution_evaluation_rating: data.result.solutionEvaluator?.rating ?? "",

@@ -35,9 +35,10 @@ function targetLangOrEnvChanged() {
           API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predictfeedback"
       }
       else {
-         API_ENDPOINT = "http://localhost:7075/api/predict" // C#  local
-         API_ENDPOINT_FEEDBACK = "http://localhost:7075/api/predict/feedback";
+         API_ENDPOINT = "http://localhost:7071/api/predict" // C#  local
+         API_ENDPOINT_FEEDBACK = "http://localhost:7071/api/predict/feedback";
          API_ENDPOINT_EXTRA = "==QTa-ccuFzAN1BCqP-2isQChQb96l_Fe_yOg8SibDHME01CdMEJIjaG=edoc?".split('').reverse().join('');
+         //API_ENDPOINT_EXTRA = "==AYfzfMuFzAwFRr_aShvZJv8FSrHED-nzV8QdjoiIBz7AZk_cDQpW1z=edoc?".split('').reverse().join('');  // QAS
       }
       CUSTOMER_CODE = "Z05";
       break;
@@ -82,6 +83,10 @@ function dueDateChanged() {
 
 function sourceChanged() {
   displaySource();
+}
+
+function accessTokenChanged() {
+  displayToken();
 }
 
 

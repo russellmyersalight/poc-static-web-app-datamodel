@@ -49,6 +49,15 @@ function displayDueDate() {
   document.getElementById("dueDate").innerHTML = " Ticket Due Date: <b>" + TICKET_DUE_DATE + "</b>&nbsp;&nbsp;&nbsp;";
 }
 
+function displayToken() {
+
+  const accessTokenPreview =  ACCESS_TOKEN.length > 10
+      ? `${ACCESS_TOKEN.slice(0, 5)}...${ACCESS_TOKEN.slice(-5)}`
+      : ACCESS_TOKEN;
+
+  document.getElementById("tokendisplay").innerHTML = " Token: <b>" + accessTokenPreview + "</b>&nbsp;&nbsp;&nbsp;";
+}
+
 function displaySource() {
   if ((TICKET_SOURCE === null) || (TICKET_SOURCE === "")) {
 
@@ -256,6 +265,15 @@ function toggleDiagnostics() {
         <td colspan="3">${API_ENDPOINT}</td>
       `;
       tbody.appendChild(endpointRow);
+
+      // Add targetAgentUsed row at the bottom
+      const targetAgentUsedRow = document.createElement('tr');
+       targetAgentUsedRow.innerHTML = `
+        <td>Target Agent used</td>
+        <td colspan="3">${window.targetAgentUsed}</td>
+      `;
+      tbody.appendChild(targetAgentUsedRow);
+
 
 
       const agenticRetrievalTokensRow = document.createElement('tr');

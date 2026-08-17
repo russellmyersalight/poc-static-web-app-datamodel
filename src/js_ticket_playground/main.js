@@ -22,6 +22,39 @@ fetch('config.json')
       });
 
 
+fetch('queryparamdefaults.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load queryparamdefaults.json');
+        }
+        return response.json();
+      })
+      .then(queryparamdefaults => {
+        console.log(queryparamdefaults.token);
+        if (accessTokenParam == null) {
+           if (queryparamdefaults.token != null) {
+               ACCESS_TOKEN = queryparamdefaults.token;  //  only use default if query param not supplied
+               accessTokenChanged();
+           }
+        }
+        if (targetEnvParam == null) {
+           if (queryparamdefaults.env != null) {
+               TARGET_ENV = queryparamdefaults.env;  //  only use default if query param not supplied
+               targetEnvChanged();
+           }
+        }
+        if (gccParam == null) {
+           if (queryparamdefaults.gcc != null) {
+               GCC = queryparamdefaults.gcc;  //  only use default if query param not supplied
+               gccChanged();
+           }
+        }
+
+
+      })
+      .catch(error => {
+        console.error('Error loading queryparadefaults:', error);
+      });
 
 const stars = document.querySelectorAll('#star-rating .star');
 

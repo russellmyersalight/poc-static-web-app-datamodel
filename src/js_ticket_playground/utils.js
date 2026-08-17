@@ -113,6 +113,19 @@ function formatCitationLinks(proposedSolution, citationLinks) {
       return fullReferencesSwapped;
 }
 
+function citationLinksIncludeWorkInstructions(citationLinks) {
+
+       for (const [key, value] of Object.entries(citationLinks)) {
+            console.log(`${key}: ${value}`);
+            if (value.includes("content-wi"))  {
+                console.log("Yep its a work instruction");
+                return true;
+            }
+      }
+       return false;
+
+}
+
 function dictToHtmlList(dict) {
   let html = "<ul>\n";
 

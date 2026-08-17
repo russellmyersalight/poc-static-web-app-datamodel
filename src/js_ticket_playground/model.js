@@ -43,6 +43,19 @@ let CUSTOMER_CODE = "Z05"; // Used for Feedback endpoint logging to db
  }
 
 
+ let ACCESS_TOKEN = "";
+ const accessTokenParam = urlParams.get('token');
+
+ if (accessTokenParam == null) {
+
+ }
+ else {
+   ACCESS_TOKEN = accessTokenParam;
+ }
+
+ accessTokenChanged();
+
+
  let TARGET_ENV = 'q';
  let TARGET_LANG = "csharp";
 
